@@ -1,0 +1,128 @@
+{
+  "total_results": 2,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": null,
+  "resources": [
+    {
+      "metadata": {
+        "guid": "service-instance-guid-a",
+        "url": "/v2/service_instances/service-instance-guid-a",
+        "created_at": "2016-11-14T14:56:40Z",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "database-a",
+        "credentials": {},
+        "service_plan_guid": "service-plan-guid",
+        "space_guid": "space-guid",
+        "gateway_data": null,
+        "dashboard_url": "https://dashboard.url/service-instance-guid-a",
+        "type": "managed_service_instance",
+        "last_operation": {
+          "type": "create",
+          "state": "succeeded",
+          "description": "",
+          "updated_at": null,
+          "created_at": "2016-11-14T14:56:41Z"
+        },
+        "tags": [],
+        "space_url": "/v2/spaces/space-guid",
+        "service_plan_url": "/v2/service_plans/service-plan-guid",
+        "service_bindings_url": "/v2/service_instances/service-instance-guid-a/service_bindings",
+        "service_keys_url": "/v2/service_instances/service-instance-guid-a/service_keys",
+        "routes_url": "/v2/service_instances/service-instance-guid-a/routes"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "service-instance-guid-b",
+        "url": "/v2/service_instances/service-instance-guid-b",
+        "created_at": "2016-11-14T14:56:40Z",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "database-b",
+        "credentials": {},
+        "service_plan_guid": "service-plan-guid",
+        "space_guid": "space-guid",
+        "gateway_data": null,
+        "dashboard_url": "https://dashboard.url/service-instance-guid-b",
+        "type": "managed_service_instance",
+        "last_operation": {
+          "type": "create",
+          "state": "succeeded",
+          "description": "",
+          "updated_at": null,
+          "created_at": "2016-11-14T14:56:41Z"
+        },
+        "tags": [],
+        "space_url": "/v2/spaces/space-guid",
+        "service_plan_url": "/v2/service_plans/service-plan-guid",
+        "service_bindings_url": "/v2/service_instances/service-instance-guid-b/service_bindings",
+        "service_keys_url": "/v2/service_instances/service-instance-guid-b/service_keys",
+        "routes_url": "/v2/service_instances/service-instance-guid-b/routes"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "service-instance-guid-c",
+        "url": "/v2/service_instances/service-instance-guid-c",
+        "created_at": "2016-11-14T14:56:40Z",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "unbound-database-c",
+        "credentials": {},
+        "service_plan_guid": "service-plan-guid",
+        "space_guid": "space-guid",
+        "gateway_data": null,
+        "dashboard_url": "https://dashboard.url/service-instance-guid-c",
+        "type": "managed_service_instance",
+        "last_operation": {
+          "type": "create",
+          "state": "succeeded",
+          "description": "",
+          "updated_at": null,
+          "created_at": "2016-11-14T14:56:41Z"
+        },
+        "tags": [],
+        "space_url": "/v2/spaces/space-guid",
+        "service_plan_url": "/v2/service_plans/service-plan-guid",
+        "service_bindings_url": "/v2/service_instances/service-instance-guid-c/service_bindings",
+        "service_keys_url": "/v2/service_instances/service-instance-guid-c/service_keys",
+        "routes_url": "/v2/service_instances/service-instance-guid-c/routes"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "service-instance-guid-d",
+        "url": "/v2/service_instances/service-instance-guid-d",
+        "created_at": "2016-11-14T14:56:40Z",
+        "updated_at": null
+      },
+      "entity": {
+        "name": "redis-d",
+        "credentials": {},
+        "service_plan_guid": "redis-service-plan-guid",
+        "space_guid": "space-guid",
+        "gateway_data": null,
+        "dashboard_url": "https://dashboard.url/service-instance-guid-d",
+        "type": "managed_service_instance",
+        "last_operation": {
+          "type": "create",
+          "state": "succeeded",
+          "description": "",
+          "updated_at": null,
+          "created_at": "2016-11-14T14:56:41Z"
+        },
+        "tags": [],
+        "space_url": "/v2/spaces/space-guid",
+        "service_plan_url": "/v2/service_plans/service-plan-guid",
+        "service_bindings_url": "/v2/service_instances/service-instance-guid-d/service_bindings",
+        "service_keys_url": "/v2/service_instances/service-instance-guid-d/service_keys",
+        "routes_url": "/v2/service_instances/service-instance-guid-d/routes"
+      }
+    }
+  ]
+}
