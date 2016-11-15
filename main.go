@@ -2,7 +2,7 @@ package main
 
 import (
 	"code.cloudfoundry.org/cli/plugin"
-	"github.com/andreasf/cf-mysql/cfmysql"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 	"os"
 	"fmt"
 )

@@ -12,7 +12,7 @@ var _ = Describe("Main", func() {
 		err := buildCmd.Run()
 		Expect(err).To(BeNil())
 
-		runCmd := exec.Command("./cf-mysql")
+		runCmd := exec.Command("./cf-mysql-plugin")
 		output, err := runCmd.CombinedOutput()
 
 		Expect(err).ToNot(BeNil())
