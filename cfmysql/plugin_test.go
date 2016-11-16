@@ -18,15 +18,15 @@ var _ = Describe("Plugin", func() {
 	var err *gbytes.Buffer
 	var cliConnection *pluginfakes.FakeCliConnection
 	var mysqlPlugin MysqlPlugin
-	var sdkClient *cfmysqlfakes.FakeCfClient
+	var apiClient *cfmysqlfakes.FakeApiClient
 
 	BeforeEach(func() {
 		in = gbytes.NewBuffer()
 		out = gbytes.NewBuffer()
 		err = gbytes.NewBuffer()
 		cliConnection = new(pluginfakes.FakeCliConnection)
-		sdkClient = new(cfmysqlfakes.FakeCfClient)
-		mysqlPlugin = MysqlPlugin{In: in, Out: out, Err: err, SdkClient: sdkClient}
+		apiClient = new(cfmysqlfakes.FakeApiClient)
+		mysqlPlugin = MysqlPlugin{In: in, Out: out, Err: err, ApiClient: apiClient}
 	})
 
 	Context("When calling 'cf plugins'", func() {
@@ -71,11 +71,11 @@ var _ = Describe("Plugin", func() {
 			})
 
 			It("Lists the available MySQL databases", func() {
-				sdkClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				apiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
 
 				mysqlPlugin.Run(cliConnection, []string{"mysql"})
 
-				Expect(sdkClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(out).To(gbytes.Say("MySQL databases bound to an app:\n\ndatabase-a\ndatabase-b\n"))
 				Expect(err).To(gbytes.Say(""))
 				Expect(mysqlPlugin.ExitCode).To(Equal(0))
@@ -84,11 +84,11 @@ var _ = Describe("Plugin", func() {
 
 		Context("With no databases available", func() {
 			It("Tells the user that databases must be bound to a started app", func() {
-				sdkClient.GetMysqlServicesReturns([]MysqlService{}, nil)
+				apiClient.GetMysqlServicesReturns([]MysqlService{}, nil)
 
 				mysqlPlugin.Run(cliConnection, []string{"mysql"})
 
-				Expect(sdkClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(out).To(gbytes.Say(""))
 				Expect(err).To(gbytes.Say("No MySQL databases available. Please bind your database services to a started app to make them available to 'cf mysql'."))
 				Expect(mysqlPlugin.ExitCode).To(Equal(0))
@@ -97,11 +97,11 @@ var _ = Describe("Plugin", func() {
 
 		Context("With failing API calls", func() {
 			It("Shows an error message", func() {
-				sdkClient.GetMysqlServicesReturns(nil, fmt.Errorf("foo"))
+				apiClient.GetMysqlServicesReturns(nil, fmt.Errorf("foo"))
 
 				mysqlPlugin.Run(cliConnection, []string{"mysql"})
 
-				Expect(sdkClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(out).To(gbytes.Say(""))
 				Expect(err).To(gbytes.Say("Unable to retrieve services: foo\n"))
 				Expect(mysqlPlugin.ExitCode).To(Equal(1))

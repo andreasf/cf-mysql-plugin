@@ -11,31 +11,31 @@ import (
 
 var _ = Describe("CfSdkClient", func() {
 	Context("Retrieving available MySQL services", func() {
-		var sdkClient *SdkCfClient
+		var apiClient *SdkApiClient
 		var cliConnection *pluginfakes.FakeCliConnection
 
 		BeforeEach(func() {
 			cliConnection = new(pluginfakes.FakeCliConnection)
 			cliConnection.CliCommandWithoutTerminalOutputStub = mockCfCurl
-			sdkClient = new(SdkCfClient)
+			apiClient = new(SdkApiClient)
 		})
 
 		It("Gets a list of bindings", func() {
-			paginatedResources, err := sdkClient.GetServiceBindings(cliConnection)
+			paginatedResources, err := apiClient.GetServiceBindings(cliConnection)
 
 			Expect(err).To(BeNil())
 			Expect(paginatedResources.Resources).To(HaveLen(3))
 		})
 
 		It("Gets a list of instances", func() {
-			paginatedResources, err := sdkClient.GetServiceInstances(cliConnection)
+			paginatedResources, err := apiClient.GetServiceInstances(cliConnection)
 
 			Expect(err).To(BeNil())
 			Expect(paginatedResources.Resources).To(HaveLen(4))
 		})
 
 		It("Gets a list of service instances and bindings", func() {
-			services, err := sdkClient.GetMysqlServices(cliConnection)
+			services, err := apiClient.GetMysqlServices(cliConnection)
 
 			Expect(err).To(BeNil())
 			Expect(services).To(HaveLen(2))

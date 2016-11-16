@@ -11,7 +11,7 @@ type MysqlPlugin struct {
 	In        io.Reader
 	Out       io.Writer
 	Err       io.Writer
-	SdkClient CfClient
+	ApiClient ApiClient
 	ExitCode  int
 }
 
@@ -42,7 +42,7 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 
 func (self *MysqlPlugin) Run(cliConnection plugin.CliConnection, args []string) {
 	if args[0] == "mysql" {
-		services, err := self.SdkClient.GetMysqlServices(cliConnection)
+		services, err := self.ApiClient.GetMysqlServices(cliConnection)
 		if err != nil {
 			fmt.Fprintf(self.Err, "Unable to retrieve services: %s\n", err)
 			self.ExitCode = 1
@@ -65,6 +65,6 @@ func NewPlugin() *MysqlPlugin {
 		In: os.Stdin,
 		Out: os.Stdout,
 		Err: os.Stderr,
-		SdkClient: new(SdkCfClient),
+		ApiClient: new(SdkApiClient),
 	}
 }

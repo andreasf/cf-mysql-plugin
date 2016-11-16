@@ -8,7 +8,7 @@ import (
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 )
 
-type FakeCfClient struct {
+type FakeApiClient struct {
 	GetMysqlServicesStub        func(cliConnection plugin.CliConnection) ([]cfmysql.MysqlService, error)
 	getMysqlServicesMutex       sync.RWMutex
 	getMysqlServicesArgsForCall []struct {
@@ -22,7 +22,7 @@ type FakeCfClient struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeCfClient) GetMysqlServices(cliConnection plugin.CliConnection) ([]cfmysql.MysqlService, error) {
+func (fake *FakeApiClient) GetMysqlServices(cliConnection plugin.CliConnection) ([]cfmysql.MysqlService, error) {
 	fake.getMysqlServicesMutex.Lock()
 	fake.getMysqlServicesArgsForCall = append(fake.getMysqlServicesArgsForCall, struct {
 		cliConnection plugin.CliConnection
@@ -36,19 +36,19 @@ func (fake *FakeCfClient) GetMysqlServices(cliConnection plugin.CliConnection) (
 	}
 }
 
-func (fake *FakeCfClient) GetMysqlServicesCallCount() int {
+func (fake *FakeApiClient) GetMysqlServicesCallCount() int {
 	fake.getMysqlServicesMutex.RLock()
 	defer fake.getMysqlServicesMutex.RUnlock()
 	return len(fake.getMysqlServicesArgsForCall)
 }
 
-func (fake *FakeCfClient) GetMysqlServicesArgsForCall(i int) plugin.CliConnection {
+func (fake *FakeApiClient) GetMysqlServicesArgsForCall(i int) plugin.CliConnection {
 	fake.getMysqlServicesMutex.RLock()
 	defer fake.getMysqlServicesMutex.RUnlock()
 	return fake.getMysqlServicesArgsForCall[i].cliConnection
 }
 
-func (fake *FakeCfClient) GetMysqlServicesReturns(result1 []cfmysql.MysqlService, result2 error) {
+func (fake *FakeApiClient) GetMysqlServicesReturns(result1 []cfmysql.MysqlService, result2 error) {
 	fake.GetMysqlServicesStub = nil
 	fake.getMysqlServicesReturns = struct {
 		result1 []cfmysql.MysqlService
@@ -56,7 +56,7 @@ func (fake *FakeCfClient) GetMysqlServicesReturns(result1 []cfmysql.MysqlService
 	}{result1, result2}
 }
 
-func (fake *FakeCfClient) Invocations() map[string][][]interface{} {
+func (fake *FakeApiClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.getMysqlServicesMutex.RLock()
@@ -64,7 +64,7 @@ func (fake *FakeCfClient) Invocations() map[string][][]interface{} {
 	return fake.invocations
 }
 
-func (fake *FakeCfClient) recordInvocation(key string, args []interface{}) {
+func (fake *FakeApiClient) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -76,4 +76,4 @@ func (fake *FakeCfClient) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ cfmysql.CfClient = new(FakeCfClient)
+var _ cfmysql.ApiClient = new(FakeApiClient)

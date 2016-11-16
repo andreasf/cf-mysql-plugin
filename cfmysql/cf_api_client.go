@@ -9,8 +9,8 @@ import (
 	pluginResources "github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
 )
 
-//go:generate counterfeiter . CfClient
-type CfClient interface {
+//go:generate counterfeiter . ApiClient
+type ApiClient interface {
 	GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error)
 }
 
@@ -24,9 +24,9 @@ type MysqlService struct {
 	Password string
 }
 
-type SdkCfClient struct{}
+type SdkApiClient struct{}
 
-func (self *SdkCfClient) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
+func (self *SdkApiClient) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
 	bindings, err := self.GetServiceBindings(cliConnection)
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (self *SdkCfClient) GetMysqlServices(cliConnection plugin.CliConnection) ([
 	return getAvailableServices(bindings, instances), nil
 }
 
-func (self *SdkCfClient) GetServiceBindings(cliConnection plugin.CliConnection) (*pluginResources.PaginatedServiceBindingResources, error) {
+func (self *SdkApiClient) GetServiceBindings(cliConnection plugin.CliConnection) (*pluginResources.PaginatedServiceBindingResources, error) {
 	bindingLines, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "/v2/service_bindings")
 	if err != nil {
 		return nil, fmt.Errorf("Unable to retrieve service bindings: %s", err)
@@ -60,7 +60,7 @@ func deserializeBindings(bindingLines []string) (*pluginResources.PaginatedServi
 	return paginatedResources, nil
 }
 
-func (self *SdkCfClient) GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error) {
+func (self *SdkApiClient) GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error) {
 	instanceLines, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "/v2/service_instances")
 	if err != nil {
 		return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
