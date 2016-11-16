@@ -78,7 +78,7 @@ var _ = Describe("Plugin", func() {
 				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(out).To(gbytes.Say("MySQL databases bound to an app:\n\ndatabase-a\ndatabase-b\n"))
 				Expect(err).To(gbytes.Say(""))
-				Expect(mysqlPlugin.ExitCode).To(Equal(0))
+				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
 			})
 		})
 
@@ -91,7 +91,7 @@ var _ = Describe("Plugin", func() {
 				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(out).To(gbytes.Say(""))
 				Expect(err).To(gbytes.Say("No MySQL databases available. Please bind your database services to a started app to make them available to 'cf mysql'."))
-				Expect(mysqlPlugin.ExitCode).To(Equal(0))
+				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
 			})
 		})
 
@@ -104,8 +104,67 @@ var _ = Describe("Plugin", func() {
 				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(out).To(gbytes.Say(""))
 				Expect(err).To(gbytes.Say("Unable to retrieve services: foo\n"))
-				Expect(mysqlPlugin.ExitCode).To(Equal(1))
+				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
 			})
+		})
+	})
+
+	Context("When calling 'cf mysql db-name'", func() {
+		Context("When the database is available", func() {
+			var serviceA, serviceB MysqlService
+
+			BeforeEach(func() {
+				serviceA = MysqlService{
+					Name: "database-a",
+					Hostname: "database-a.host",
+					Port: "123",
+					DbName: "dbname-a",
+				}
+				serviceB = MysqlService{
+					Name: "database-b",
+					Hostname: "database-b.host",
+					Port: "234",
+					DbName: "dbname-b",
+				}
+			})
+		})
+
+		Context("When the database is not available", func() {
+			It("Shows an error message and exits with 1", func() {
+				apiClient.GetMysqlServicesReturns([]MysqlService{}, nil)
+
+				mysqlPlugin.Run(cliConnection, []string{"mysql", "db-name"})
+
+				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(out).To(gbytes.Say(""))
+				Expect(err).To(gbytes.Say("^Service 'db-name' is not bound to an app, not a MySQL database or does not exist in the current space.\n$"))
+				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
+
+			})
+		})
+
+		Context("When the API client returns an error", func() {
+			It("Shows an error message and exits with 1", func() {
+				apiClient.GetMysqlServicesReturns(nil, fmt.Errorf("PC LOAD LETTER"))
+
+				mysqlPlugin.Run(cliConnection, []string{"mysql", "db-name"})
+
+				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(out).To(gbytes.Say(""))
+				Expect(err).To(gbytes.Say("^Unable to retrieve services: PC LOAD LETTER\n$"))
+				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
+			})
+		})
+	})
+
+	Context("When the plugin is being uninstalled", func() {
+		It("Does not give any output or call the API", func() {
+			mysqlPlugin.Run(cliConnection, []string{"CLI-MESSAGE-UNINSTALL"})
+
+			Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(0))
+			Expect(out).To(gbytes.Say("^$"))
+			Expect(err).To(gbytes.Say("^$"))
+			Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
 		})
 	})
 })

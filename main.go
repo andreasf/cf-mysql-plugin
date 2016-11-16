@@ -19,5 +19,5 @@ func main() {
 	mysqlPlugin := cfmysql.NewPlugin()
 	plugin.Start(mysqlPlugin)
 
-	os.Exit(mysqlPlugin.ExitCode)
+	os.Exit(mysqlPlugin.GetExitCode())
 }
