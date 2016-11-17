@@ -36,7 +36,7 @@ type SdkApiClient struct {
 func NewSdkApiClient() *SdkApiClient {
 	return &SdkApiClient{
 		SshRunner: new(CfSshRunner),
-		PortWaiter: new(TcpPortWaiter),
+		PortWaiter: NewPortWaiter(),
 	}
 }
 
