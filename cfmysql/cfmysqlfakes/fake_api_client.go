@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/cli/plugin"
+	. "code.cloudfoundry.org/cli/plugin/models"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 )
 
@@ -17,6 +18,23 @@ type FakeApiClient struct {
 	getMysqlServicesReturns struct {
 		result1 []cfmysql.MysqlService
 		result2 error
+	}
+	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]GetAppsModel, error)
+	getStartedAppsMutex       sync.RWMutex
+	getStartedAppsArgsForCall []struct {
+		cliConnection plugin.CliConnection
+	}
+	getStartedAppsReturns struct {
+		result1 []GetAppsModel
+		result2 error
+	}
+	OpenSshTunnelStub        func(cliConnection plugin.CliConnection, toService cfmysql.MysqlService, throughApp string, localPort int)
+	openSshTunnelMutex       sync.RWMutex
+	openSshTunnelArgsForCall []struct {
+		cliConnection plugin.CliConnection
+		toService     cfmysql.MysqlService
+		throughApp    string
+		localPort     int
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -56,11 +74,76 @@ func (fake *FakeApiClient) GetMysqlServicesReturns(result1 []cfmysql.MysqlServic
 	}{result1, result2}
 }
 
+func (fake *FakeApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
+	fake.getStartedAppsMutex.Lock()
+	fake.getStartedAppsArgsForCall = append(fake.getStartedAppsArgsForCall, struct {
+		cliConnection plugin.CliConnection
+	}{cliConnection})
+	fake.recordInvocation("GetStartedApps", []interface{}{cliConnection})
+	fake.getStartedAppsMutex.Unlock()
+	if fake.GetStartedAppsStub != nil {
+		return fake.GetStartedAppsStub(cliConnection)
+	} else {
+		return fake.getStartedAppsReturns.result1, fake.getStartedAppsReturns.result2
+	}
+}
+
+func (fake *FakeApiClient) GetStartedAppsCallCount() int {
+	fake.getStartedAppsMutex.RLock()
+	defer fake.getStartedAppsMutex.RUnlock()
+	return len(fake.getStartedAppsArgsForCall)
+}
+
+func (fake *FakeApiClient) GetStartedAppsArgsForCall(i int) plugin.CliConnection {
+	fake.getStartedAppsMutex.RLock()
+	defer fake.getStartedAppsMutex.RUnlock()
+	return fake.getStartedAppsArgsForCall[i].cliConnection
+}
+
+func (fake *FakeApiClient) GetStartedAppsReturns(result1 []GetAppsModel, result2 error) {
+	fake.GetStartedAppsStub = nil
+	fake.getStartedAppsReturns = struct {
+		result1 []GetAppsModel
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeApiClient) OpenSshTunnel(cliConnection plugin.CliConnection, toService cfmysql.MysqlService, throughApp string, localPort int) {
+	fake.openSshTunnelMutex.Lock()
+	fake.openSshTunnelArgsForCall = append(fake.openSshTunnelArgsForCall, struct {
+		cliConnection plugin.CliConnection
+		toService     cfmysql.MysqlService
+		throughApp    string
+		localPort     int
+	}{cliConnection, toService, throughApp, localPort})
+	fake.recordInvocation("OpenSshTunnel", []interface{}{cliConnection, toService, throughApp, localPort})
+	fake.openSshTunnelMutex.Unlock()
+	if fake.OpenSshTunnelStub != nil {
+		fake.OpenSshTunnelStub(cliConnection, toService, throughApp, localPort)
+	}
+}
+
+func (fake *FakeApiClient) OpenSshTunnelCallCount() int {
+	fake.openSshTunnelMutex.RLock()
+	defer fake.openSshTunnelMutex.RUnlock()
+	return len(fake.openSshTunnelArgsForCall)
+}
+
+func (fake *FakeApiClient) OpenSshTunnelArgsForCall(i int) (plugin.CliConnection, cfmysql.MysqlService, string, int) {
+	fake.openSshTunnelMutex.RLock()
+	defer fake.openSshTunnelMutex.RUnlock()
+	return fake.openSshTunnelArgsForCall[i].cliConnection, fake.openSshTunnelArgsForCall[i].toService, fake.openSshTunnelArgsForCall[i].throughApp, fake.openSshTunnelArgsForCall[i].localPort
+}
+
 func (fake *FakeApiClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.getMysqlServicesMutex.RLock()
 	defer fake.getMysqlServicesMutex.RUnlock()
+	fake.getStartedAppsMutex.RLock()
+	defer fake.getStartedAppsMutex.RUnlock()
+	fake.openSshTunnelMutex.RLock()
+	defer fake.openSshTunnelMutex.RUnlock()
 	return fake.invocations
 }
 

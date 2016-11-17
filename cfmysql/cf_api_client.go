@@ -7,11 +7,14 @@ import (
 	"code.cloudfoundry.org/cli/cf/api/resources"
 	"encoding/json"
 	pluginResources "github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
+	. "code.cloudfoundry.org/cli/plugin/models"
 )
 
 //go:generate counterfeiter . ApiClient
 type ApiClient interface {
 	GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error)
+	GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error)
+	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int)
 }
 
 type MysqlService struct {
@@ -24,7 +27,18 @@ type MysqlService struct {
 	Password string
 }
 
-type SdkApiClient struct{}
+type SdkApiClient struct {
+	SshRunner  SshRunner
+	PortWaiter PortWaiter
+	tunnelChan chan bool
+}
+
+func NewSdkApiClient() *SdkApiClient {
+	return &SdkApiClient{
+		SshRunner: new(CfSshRunner),
+		PortWaiter: new(TcpPortWaiter),
+	}
+}
 
 func (self *SdkApiClient) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
 	bindings, err := self.GetServiceBindings(cliConnection)
@@ -46,6 +60,34 @@ func (self *SdkApiClient) GetServiceBindings(cliConnection plugin.CliConnection)
 		return nil, fmt.Errorf("Unable to retrieve service bindings: %s", err)
 	}
 	return deserializeBindings(bindingLines)
+}
+
+func (self *SdkApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
+	apps, err := cliConnection.GetApps()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to retrieve apps: %s", err)
+	}
+
+	startedApps := make([]GetAppsModel, 0, len(apps))
+
+	for _, app := range (apps) {
+		if app.State == "started" {
+			startedApps = append(startedApps, app)
+		}
+	}
+
+	return startedApps, nil
+}
+
+func (self *SdkApiClient) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
+	self.tunnelChan = make(chan bool, 0)
+	go self.SshRunner.OpenSshTunnel(cliConnection, toService, throughApp, localPort, self.tunnelChan)
+
+	self.PortWaiter.WaitUntilOpen(localPort)
+}
+
+func (self *SdkApiClient) GetTunnelChan() chan bool {
+	return self.tunnelChan
 }
 
 func deserializeBindings(bindingLines []string) (*pluginResources.PaginatedServiceBindingResources, error) {

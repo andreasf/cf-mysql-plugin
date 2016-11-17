@@ -8,11 +8,13 @@ import (
 )
 
 type MysqlPlugin struct {
-	In        io.Reader
-	Out       io.Writer
-	Err       io.Writer
-	ApiClient ApiClient
-	exitCode  int
+	In          io.Reader
+	Out         io.Writer
+	Err         io.Writer
+	ApiClient   ApiClient
+	MysqlRunner MysqlRunner
+	PortFinder  PortFinder
+	exitCode    int
 }
 
 func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
@@ -44,21 +46,13 @@ func (self *MysqlPlugin) Run(cliConnection plugin.CliConnection, args []string) 
 	command := args[0]
 	switch command {
 	case "mysql":
-		services, err := self.ApiClient.GetMysqlServices(cliConnection)
-		if err != nil {
-			fmt.Fprintf(self.Err, "Unable to retrieve services: %s\n", err)
-			self.setErrorExit()
-			return
-		}
-
 		if len(args) > 1 {
 			dbName := args[1]
-			self.connectTo(services, command, dbName)
+			self.connectTo(cliConnection, command, dbName)
 		} else {
-			self.showServices(services, command)
+			self.showServices(cliConnection, command)
 		}
 	}
-
 }
 
 func (self *MysqlPlugin) GetExitCode() int {
@@ -69,13 +63,62 @@ func (self *MysqlPlugin) setErrorExit() {
 	self.exitCode = 1
 }
 
-func (self *MysqlPlugin) connectTo(services []MysqlService, command string, dbName string) {
-	fmt.Fprintf(self.Err, "Service '%s' is not bound to an app, not a MySQL database or does not exist in the " +
-		"current space.\n", dbName)
-	self.setErrorExit()
+func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command string, dbName string) {
+	services, err := self.ApiClient.GetMysqlServices(cliConnection)
+	if err != nil {
+		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve services: %s\n", err)
+		self.setErrorExit()
+		return
+	}
+
+	service, serviceFound := getServiceByName(services, dbName)
+	if !serviceFound {
+		fmt.Fprintf(self.Err, "FAILED\nService '%s' is not bound to an app, not a MySQL database or does not exist in the " +
+			"current space.\n", dbName)
+		self.setErrorExit()
+		return
+	}
+
+	startedApps, err := self.ApiClient.GetStartedApps(cliConnection)
+	if err != nil {
+		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve started apps: %s\n", err)
+		self.setErrorExit()
+		return
+	}
+
+	if len(startedApps) == 0 {
+		fmt.Fprintf(self.Err, "FAILED\nUnable to connect to '%s': no started apps in current space\n", dbName)
+		self.setErrorExit()
+		return
+	}
+
+	tunnelPort := self.PortFinder.GetPort()
+	self.ApiClient.OpenSshTunnel(cliConnection, *service, startedApps[0].Name, tunnelPort)
+
+	err = self.MysqlRunner.RunMysql("127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password)
+	if err != nil {
+		fmt.Fprintf(self.Err, "FAILED\n%s", err)
+		self.setErrorExit()
+	}
 }
 
-func (self *MysqlPlugin) showServices(services []MysqlService, command string) {
+func getServiceByName(services []MysqlService, dbName string) (*MysqlService, bool) {
+	for _, service := range (services) {
+		if service.Name == dbName {
+			return &service, true
+		}
+	}
+	return nil, false
+}
+
+func (self *MysqlPlugin) showServices(cliConnection plugin.CliConnection, command string) {
+	services, err := self.ApiClient.GetMysqlServices(cliConnection)
+	if err != nil {
+		fmt.Fprintf(self.Err, "Unable to retrieve services: %s\n", err)
+		self.setErrorExit()
+		return
+	}
+
 	if len(services) > 0 {
 		fmt.Fprintln(self.Out, "MySQL databases bound to an app:\n")
 		for _, service := range (services) {
@@ -92,6 +135,8 @@ func NewPlugin() *MysqlPlugin {
 		In: os.Stdin,
 		Out: os.Stdout,
 		Err: os.Stderr,
-		ApiClient: new(SdkApiClient),
+		ApiClient: NewSdkApiClient(),
+		PortFinder: new(FreePortFinder),
+		MysqlRunner: NewMysqlRunner(),
 	}
 }

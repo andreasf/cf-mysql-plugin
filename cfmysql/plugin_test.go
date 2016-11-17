@@ -9,8 +9,8 @@ import (
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"code.cloudfoundry.org/cli/plugin"
 	"fmt"
+	"code.cloudfoundry.org/cli/plugin/models"
 )
-
 
 var _ = Describe("Plugin", func() {
 	var in *gbytes.Buffer
@@ -19,6 +19,7 @@ var _ = Describe("Plugin", func() {
 	var cliConnection *pluginfakes.FakeCliConnection
 	var mysqlPlugin MysqlPlugin
 	var apiClient *cfmysqlfakes.FakeApiClient
+	var portFinder *cfmysqlfakes.FakePortFinder
 
 	BeforeEach(func() {
 		in = gbytes.NewBuffer()
@@ -26,7 +27,14 @@ var _ = Describe("Plugin", func() {
 		err = gbytes.NewBuffer()
 		cliConnection = new(pluginfakes.FakeCliConnection)
 		apiClient = new(cfmysqlfakes.FakeApiClient)
-		mysqlPlugin = MysqlPlugin{In: in, Out: out, Err: err, ApiClient: apiClient}
+		portFinder = new(cfmysqlfakes.FakePortFinder)
+		mysqlPlugin = MysqlPlugin{
+			In: in,
+			Out: out,
+			Err: err,
+			ApiClient: apiClient,
+			PortFinder: portFinder,
+		}
 	})
 
 	Context("When calling 'cf plugins'", func() {
@@ -110,22 +118,79 @@ var _ = Describe("Plugin", func() {
 	})
 
 	Context("When calling 'cf mysql db-name'", func() {
+		var serviceA, serviceB MysqlService
+
+		BeforeEach(func() {
+			serviceA = MysqlService{
+				Name: "database-a",
+				Hostname: "database-a.host",
+				Port: "123",
+				DbName: "dbname-a",
+				Username: "username",
+				Password: "password",
+			}
+			serviceB = MysqlService{
+				Name: "database-b",
+				Hostname: "database-b.host",
+				Port: "234",
+				DbName: "dbname-b",
+			}
+		})
+
 		Context("When the database is available", func() {
-			var serviceA, serviceB MysqlService
+			var app plugin_models.GetAppsModel
+			var mysqlRunner *cfmysqlfakes.FakeMysqlRunner
 
 			BeforeEach(func() {
-				serviceA = MysqlService{
-					Name: "database-a",
-					Hostname: "database-a.host",
-					Port: "123",
-					DbName: "dbname-a",
+				app = plugin_models.GetAppsModel{
+					Name: "app-name",
 				}
-				serviceB = MysqlService{
-					Name: "database-b",
-					Hostname: "database-b.host",
-					Port: "234",
-					DbName: "dbname-b",
+				mysqlRunner = new(cfmysqlfakes.FakeMysqlRunner)
+				mysqlPlugin = MysqlPlugin{
+					In: in,
+					Out: out,
+					Err: err,
+					ApiClient: apiClient,
+					MysqlRunner: mysqlRunner,
+					PortFinder: portFinder,
 				}
+			})
+
+			It("Opens an SSH tunnel through a started app", func() {
+				apiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				apiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				portFinder.GetPortReturns(2342)
+
+				mysqlPlugin.Run(cliConnection, []string{"mysql", "database-a"})
+
+				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(apiClient.GetStartedAppsCallCount()).To(Equal(1))
+				Expect(portFinder.GetPortCallCount()).To(Equal(1))
+				Expect(apiClient.OpenSshTunnelCallCount()).To(Equal(1))
+
+				calledCliConnection, calledService, calledAppName, localPort := apiClient.OpenSshTunnelArgsForCall(0)
+				Expect(calledCliConnection).To(Equal(cliConnection))
+				Expect(calledService).To(Equal(serviceA))
+				Expect(calledAppName).To(Equal("app-name"))
+				Expect(localPort).To(Equal(2342))
+			})
+
+			It("Opens a MySQL client connecting through the tunnel", func() {
+				apiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				apiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				portFinder.GetPortReturns(2342)
+
+				mysqlPlugin.Run(cliConnection, []string{"mysql", "database-a"})
+
+				Expect(portFinder.GetPortCallCount()).To(Equal(1))
+				Expect(mysqlRunner.RunMysqlCallCount()).To(Equal(1))
+
+				hostname, port, dbName, username, password := mysqlRunner.RunMysqlArgsForCall(0)
+				Expect(hostname).To(Equal("127.0.0.1"))
+				Expect(port).To(Equal(2342))
+				Expect(dbName).To(Equal(serviceA.DbName))
+				Expect(username).To(Equal(serviceA.Username))
+				Expect(password).To(Equal(serviceA.Password))
 			})
 		})
 
@@ -137,13 +202,13 @@ var _ = Describe("Plugin", func() {
 
 				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(out).To(gbytes.Say(""))
-				Expect(err).To(gbytes.Say("^Service 'db-name' is not bound to an app, not a MySQL database or does not exist in the current space.\n$"))
+				Expect(err).To(gbytes.Say("^FAILED\nService 'db-name' is not bound to an app, not a MySQL database or does not exist in the current space.\n$"))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
 
 			})
 		})
 
-		Context("When the API client returns an error", func() {
+		Context("When the GetMysqlServicesReturns returns an error", func() {
 			It("Shows an error message and exits with 1", func() {
 				apiClient.GetMysqlServicesReturns(nil, fmt.Errorf("PC LOAD LETTER"))
 
@@ -151,10 +216,41 @@ var _ = Describe("Plugin", func() {
 
 				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(out).To(gbytes.Say(""))
-				Expect(err).To(gbytes.Say("^Unable to retrieve services: PC LOAD LETTER\n$"))
+				Expect(err).To(gbytes.Say("^FAILED\nUnable to retrieve services: PC LOAD LETTER\n$"))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
 			})
 		})
+
+		Context("When there are no started apps", func() {
+			It("Shows an error message and exits with 1", func() {
+				apiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				apiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{}, nil)
+
+				mysqlPlugin.Run(cliConnection, []string{"mysql", "database-a"})
+
+				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(apiClient.GetStartedAppsCallCount()).To(Equal(1))
+				Expect(out).To(gbytes.Say("^$"))
+				Expect(err).To(gbytes.Say("^FAILED\nUnable to connect to 'database-a': no started apps in current space\n$"))
+				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
+			})
+		})
+
+		Context("When the GetStartedApps returns an error", func() {
+			It("Shows an error message and exits with 1", func() {
+				apiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				apiClient.GetStartedAppsReturns(nil, fmt.Errorf("PC LOAD LETTER"))
+
+				mysqlPlugin.Run(cliConnection, []string{"mysql", "database-a"})
+
+				Expect(apiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(apiClient.GetStartedAppsCallCount()).To(Equal(1))
+				Expect(out).To(gbytes.Say(""))
+				Expect(err).To(gbytes.Say("^FAILED\nUnable to retrieve started apps: PC LOAD LETTER\n$"))
+				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
+			})
+		})
+
 	})
 
 	Context("When the plugin is being uninstalled", func() {
