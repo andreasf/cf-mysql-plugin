@@ -126,10 +126,11 @@ var _ = Describe("CfSdkClient", func() {
 			Username: "username-a",
 			Password: "password-a",
 		}
+		openSshTunnelCalled := make(chan bool, 0)
 
 		Context("When opening the tunnel", func() {
-			notifyWhenGoroutineCalled := func(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int, doneChan chan bool) {
-				doneChan <- true
+			notifyWhenGoroutineCalled := func(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
+				openSshTunnelCalled <- true
 			}
 
 			It("Runs the SSH runner in a goroutine", func(done Done) {
@@ -137,17 +138,17 @@ var _ = Describe("CfSdkClient", func() {
 				sshRunner.OpenSshTunnelStub = notifyWhenGoroutineCalled
 
 				apiClient.OpenSshTunnel(cliConnection, service, "app-name", 4242)
-				<-apiClient.GetTunnelChan()
+				<-openSshTunnelCalled
 				close(done)
 
 				Expect(sshRunner.OpenSshTunnelCallCount()).To(Equal(1))
 
-				calledCliConnection, calledService, calledAppName, calledPort, doneChan := sshRunner.OpenSshTunnelArgsForCall(0)
+				calledCliConnection, calledService, calledAppName, calledPort := sshRunner.OpenSshTunnelArgsForCall(0)
 				Expect(calledCliConnection).To(Equal(cliConnection))
 				Expect(calledService).To(Equal(service))
 				Expect(calledAppName).To(Equal("app-name"))
 				Expect(calledPort).To(Equal(4242))
-				Expect(doneChan).To(Equal(apiClient.GetTunnelChan()))
+				//Expect(doneChan).To(Equal(apiClient.GetTunnelChan()))
 			}, 0.2)
 
 			It("Blocks until the tunnel is open", func() {

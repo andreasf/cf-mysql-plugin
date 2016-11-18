@@ -30,7 +30,6 @@ type MysqlService struct {
 type SdkApiClient struct {
 	SshRunner  SshRunner
 	PortWaiter PortWaiter
-	tunnelChan chan bool
 }
 
 func NewSdkApiClient() *SdkApiClient {
@@ -80,14 +79,9 @@ func (self *SdkApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]
 }
 
 func (self *SdkApiClient) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
-	self.tunnelChan = make(chan bool, 0)
-	go self.SshRunner.OpenSshTunnel(cliConnection, toService, throughApp, localPort, self.tunnelChan)
+	go self.SshRunner.OpenSshTunnel(cliConnection, toService, throughApp, localPort)
 
 	self.PortWaiter.WaitUntilOpen(localPort)
-}
-
-func (self *SdkApiClient) GetTunnelChan() chan bool {
-	return self.tunnelChan
 }
 
 func deserializeBindings(bindingLines []string) (*pluginResources.PaginatedServiceBindingResources, error) {

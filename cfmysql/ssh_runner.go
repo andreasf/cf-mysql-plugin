@@ -8,12 +8,12 @@ import (
 
 //go:generate counterfeiter . SshRunner
 type SshRunner interface {
-	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int, doneChan chan bool)
+	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int)
 }
 
 type CfSshRunner struct{}
 
-func (self *CfSshRunner) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int, sdkApiClientTestOnly chan bool) {
+func (self *CfSshRunner) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
 	tunnelSpec := strconv.Itoa(localPort) + ":" + toService.Hostname + ":" + toService.Port
 	_, err := cliConnection.CliCommand("ssh", throughApp, "-N", "-L", tunnelSpec)
 

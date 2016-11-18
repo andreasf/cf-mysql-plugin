@@ -28,8 +28,7 @@ var _ = Describe("CfSshRunner", func() {
 
 	Context("When opening the tunnel", func() {
 		It("Runs 'cf ssh'", func() {
-			doneChan := make(chan bool, 0)
-			sshRunner.OpenSshTunnel(cliConnection, service, "app-name", 4242, doneChan)
+			sshRunner.OpenSshTunnel(cliConnection, service, "app-name", 4242)
 
 			Expect(cliConnection.CliCommandCallCount()).To(Equal(1))
 			calledArgs := cliConnection.CliCommandArgsForCall(0)
@@ -49,8 +48,7 @@ var _ = Describe("CfSshRunner", func() {
 			cliConnection.CliCommandWithoutTerminalOutputStub = nil
 			cliConnection.CliCommandReturns(nil, errors.New("PC LOAD LETTER"))
 
-			unused := make(chan bool, 0)
-			sshRunner.OpenSshTunnel(cliConnection, service, "app-name", 4242, unused)
+			sshRunner.OpenSshTunnel(cliConnection, service, "app-name", 4242)
 		})
 	})
 })
