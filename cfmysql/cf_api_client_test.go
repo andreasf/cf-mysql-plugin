@@ -134,6 +134,15 @@ var _ = Describe("CfSdkClient", func() {
 			}
 
 			It("Runs the SSH runner in a goroutine", func(done Done) {
+				cliConnection := new(pluginfakes.FakeCliConnection)
+				cliConnection.CliCommandWithoutTerminalOutputStub = mockCfCurl
+				sshRunner := new(cfmysqlfakes.FakeSshRunner)
+				portWaiter := new(cfmysqlfakes.FakePortWaiter)
+				apiClient := &SdkApiClient{
+					SshRunner: sshRunner,
+					PortWaiter: portWaiter,
+				}
+
 				cliConnection.CliCommandWithoutTerminalOutputStub = nil
 				sshRunner.OpenSshTunnelStub = notifyWhenGoroutineCalled
 
@@ -148,7 +157,6 @@ var _ = Describe("CfSdkClient", func() {
 				Expect(calledService).To(Equal(service))
 				Expect(calledAppName).To(Equal("app-name"))
 				Expect(calledPort).To(Equal(4242))
-				//Expect(doneChan).To(Equal(apiClient.GetTunnelChan()))
 			}, 0.2)
 
 			It("Blocks until the tunnel is open", func() {
