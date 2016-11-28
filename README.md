@@ -1,6 +1,7 @@
 # Cloud Foundry CLI MySQL Plugin
 
 [![Build Status](https://travis-ci.org/andreasf/cf-mysql-plugin.svg?branch=master)](https://travis-ci.org/andreasf/cf-mysql-plugin)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/andreasf/cf-mysql-plugin/blob/master/LICENSE)
 
 cf-mysql-plugin makes it easy to connect the `mysql` command line client to any MySQL-compatible database used by
 Cloud Foundry apps. Use it to
