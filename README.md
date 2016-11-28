@@ -11,18 +11,63 @@ Cloud Foundry apps. Use it to
 
 ## Usage
 
-Get a list of available databases:
+### Geting a list of available databases
+
+Running the plugin without arguments should give a list of available MySQL databases:
 
 ```bash
 $ cf mysql
+MySQL databases bound to an app:
+
+my-db
 ```
 
 Databases are *available* if they are bound to a running app - see below for an explanation why.
 
-Connect to the database `my-db`:
+
+### Connecting to a database
+
+Passing the name of a database service will open a MySQL client:
 
 ```bash
 $ cf mysql my-db
+Reading table information for completion of table and column names
+You can turn off this feature to get a quicker startup with -A
+
+Welcome to the MariaDB monitor.  Commands end with ; or \g.
+Your MySQL connection id is 1377314
+Server version: 5.5.46-log MySQL Community Server (GPL)
+
+Copyright (c) 2000, 2016, Oracle, MariaDB Corporation Ab and others.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+MySQL [ad_67fd2577d50deb5]> 
+```
+
+### Piping queries or dumps into `mysql`
+
+The `mysql` child process inherits standard input, output and error. Piping content in and out of `cf mysql` works
+just like it does with plain `mysql`:
+
+```bash
+$ cat database-dump.sql | cf mysql my-db
+```
+
+### Passing arguments to `mysql`
+
+Any parameters after the database name are added to the `mysql` invocation:
+
+```bash
+$ echo "select 1 as foo, 2 as bar;" | cf mysql my-db --xml
+<?xml version="1.0"?>
+
+<resultset statement="select 1 as foo, 2 as bar" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <row>
+        <field name="foo">1</field>
+        <field name="bar">2</field>
+  </row>
+</resultset>
 ```
 
 ## Installing and uninstalling

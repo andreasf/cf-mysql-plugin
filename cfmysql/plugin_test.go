@@ -185,12 +185,33 @@ var _ = Describe("Plugin", func() {
 				Expect(portFinder.GetPortCallCount()).To(Equal(1))
 				Expect(mysqlRunner.RunMysqlCallCount()).To(Equal(1))
 
-				hostname, port, dbName, username, password := mysqlRunner.RunMysqlArgsForCall(0)
+				hostname, port, dbName, username, password, _ := mysqlRunner.RunMysqlArgsForCall(0)
 				Expect(hostname).To(Equal("127.0.0.1"))
 				Expect(port).To(Equal(2342))
 				Expect(dbName).To(Equal(serviceA.DbName))
 				Expect(username).To(Equal(serviceA.Username))
 				Expect(password).To(Equal(serviceA.Password))
+			})
+
+			Context("When passing additional arguments", func() {
+				It("Passes the arguments to mysql", func() {
+					apiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+					apiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+					portFinder.GetPortReturns(2342)
+
+					mysqlPlugin.Run(cliConnection, []string{"mysql", "database-a", "--foo", "bar", "--baz"})
+
+					Expect(portFinder.GetPortCallCount()).To(Equal(1))
+					Expect(mysqlRunner.RunMysqlCallCount()).To(Equal(1))
+
+					hostname, port, dbName, username, password, args := mysqlRunner.RunMysqlArgsForCall(0)
+					Expect(hostname).To(Equal("127.0.0.1"))
+					Expect(port).To(Equal(2342))
+					Expect(dbName).To(Equal(serviceA.DbName))
+					Expect(username).To(Equal(serviceA.Username))
+					Expect(password).To(Equal(serviceA.Password))
+					Expect(args).To(Equal([]string{"--foo", "bar", "--baz"}))
+				})
 			})
 		})
 

@@ -10,20 +10,24 @@ import (
 
 //go:generate counterfeiter . MysqlRunner
 type MysqlRunner interface {
-	RunMysql(hostname string, port int, dbName string, username string, password string) error
+	RunMysql(hostname string, port int, dbName string, username string, password string, args ...string) error
 }
 
 type MysqlClientRunner struct {
 	ExecWrapper Exec
 }
 
-func (self *MysqlClientRunner) RunMysql(hostname string, port int, dbName string, username string, password string) error {
+func (self *MysqlClientRunner) RunMysql(hostname string, port int, dbName string, username string, password string, mysqlArgs ...string) error {
 	path, err := self.ExecWrapper.LookPath("mysql")
 	if err != nil {
-		return errors.New("'mysql' client not found in PATH'")
+		return errors.New("'mysql' client not found in PATH")
 	}
 
-	cmd := exec.Command(path, "-u", username, "-p" + password, "-h", hostname, "-P", strconv.Itoa(port), dbName)
+	args := []string{"-u", username, "-p" + password, "-h", hostname, "-P", strconv.Itoa(port)}
+	args = append(args, mysqlArgs...)
+	args = append(args, dbName)
+
+	cmd := exec.Command(path, args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

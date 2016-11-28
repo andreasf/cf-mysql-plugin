@@ -35,7 +35,7 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 				Name:     "mysql",
 				HelpText: "Connect to a MySQL database service",
 				UsageDetails: plugin.Usage{
-					Usage: "mysql\n   cf mysql <service-name>",
+					Usage: "Get a list of available databases:\n   cf mysql\n\n   Open a mysql client to a database:\n   cf mysql <service-name> [mysql args...]",
 				},
 			},
 		},
@@ -44,11 +44,16 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 
 func (self *MysqlPlugin) Run(cliConnection plugin.CliConnection, args []string) {
 	command := args[0]
+	mysqlArgs := []string{}
+	if len(args) > 2 {
+		mysqlArgs = args[2:]
+	}
+
 	switch command {
 	case "mysql":
 		if len(args) > 1 {
 			dbName := args[1]
-			self.connectTo(cliConnection, command, dbName)
+			self.connectTo(cliConnection, command, dbName, mysqlArgs)
 		} else {
 			self.showServices(cliConnection, command)
 		}
@@ -63,7 +68,7 @@ func (self *MysqlPlugin) setErrorExit() {
 	self.exitCode = 1
 }
 
-func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command string, dbName string) {
+func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command string, dbName string, mysqlArgs []string) {
 	services, err := self.ApiClient.GetMysqlServices(cliConnection)
 	if err != nil {
 		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve services: %s\n", err)
@@ -95,7 +100,7 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 	tunnelPort := self.PortFinder.GetPort()
 	self.ApiClient.OpenSshTunnel(cliConnection, *service, startedApps[0].Name, tunnelPort)
 
-	err = self.MysqlRunner.RunMysql("127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password)
+	err = self.MysqlRunner.RunMysql("127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, mysqlArgs...)
 	if err != nil {
 		fmt.Fprintf(self.Err, "FAILED\n%s", err)
 		self.setErrorExit()
