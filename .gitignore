@@ -31,3 +31,5 @@ _testmain.go
 
 cf-mysql-plugin
 *.coverprofile
+
+output
