@@ -12,7 +12,35 @@ Cloud Foundry apps. Use it to
 
 ## Usage
 
-### Geting a list of available databases
+```bash
+$ cf mysql -h
+NAME:
+   mysql - Connect to a MySQL database service
+
+USAGE:
+   Get a list of available databases:
+   cf mysql
+
+   Open a mysql client to a database:
+   cf mysql <service-name> [mysql args...]
+
+
+$ cf mysqldump -h
+NAME:
+   mysqldump - Dump a MySQL database
+
+USAGE:
+   Get a list of available databases:
+   cf mysqldump
+
+   Dumping all tables in a database:
+   cf mysqldump <service-name> [mysqldump args...]
+
+   Dumping specific tables in a database:
+   cf mysqldump <service-name> [tables...] [mysqldump args...]
+```
+
+### Getting a list of available databases
 
 Running the plugin without arguments should give a list of available MySQL databases:
 
@@ -69,6 +97,22 @@ $ echo "select 1 as foo, 2 as bar;" | cf mysql my-db --xml
         <field name="bar">2</field>
   </row>
 </resultset>
+```
+
+### Dumping a database
+
+Running `cf mysqldump` with a database name will dump the whole database:
+
+```bash
+$ cf mysqldump my-db --single-transaction > dump.sql
+```
+
+### Dumping individual tables
+
+Passing table names in addition to the database name will just dump those tables:
+
+```bash
+$ cf mysqldump my-db table1 table2 --single-transaction > two-tables.sql
 ```
 
 ## Installing and uninstalling

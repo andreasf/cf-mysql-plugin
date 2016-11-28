@@ -22,7 +22,7 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 		Name: "mysql",
 		Version: plugin.VersionType{
 			Major: 1,
-			Minor: 0,
+			Minor: 3,
 			Build: 0,
 		},
 		MinCliVersion: plugin.VersionType{
@@ -41,21 +41,38 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 						"cf mysql <service-name> [mysql args...]",
 				},
 			},
+			{
+				Name:     "mysqldump",
+				HelpText: "Dump a MySQL database",
+				UsageDetails: plugin.Usage{
+					Usage: "Get a list of available databases:\n   " +
+						"cf mysqldump\n\n   " +
+						"Dumping all tables in a database:\n   " +
+						"cf mysqldump <service-name> [mysqldump args...]\n\n   " +
+						"Dumping specific tables in a database:\n   " +
+						"cf mysqldump <service-name> [tables...] [mysqldump args...]",
+				},
+			},
 		},
 	}
 }
 
 func (self *MysqlPlugin) Run(cliConnection plugin.CliConnection, args []string) {
 	command := args[0]
-	mysqlArgs := []string{}
-	if len(args) > 2 {
-		mysqlArgs = args[2:]
-	}
 
 	switch command {
 	case "mysql":
+		fallthrough
+
+	case "mysqldump":
 		if len(args) > 1 {
 			dbName := args[1]
+
+			mysqlArgs := []string{}
+			if len(args) > 2 {
+				mysqlArgs = args[2:]
+			}
+
 			self.connectTo(cliConnection, command, dbName, mysqlArgs)
 		} else {
 			self.showServices(cliConnection, command)
@@ -103,7 +120,7 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 	tunnelPort := self.PortFinder.GetPort()
 	self.ApiClient.OpenSshTunnel(cliConnection, *service, startedApps[0].Name, tunnelPort)
 
-	err = self.MysqlRunner.RunMysql("127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, mysqlArgs...)
+	err = self.runClient(command, "127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, mysqlArgs...)
 	if err != nil {
 		fmt.Fprintf(self.Err, "FAILED\n%s", err)
 		self.setErrorExit()
@@ -117,6 +134,18 @@ func getServiceByName(services []MysqlService, dbName string) (*MysqlService, bo
 		}
 	}
 	return nil, false
+}
+
+func (self *MysqlPlugin) runClient(command string, hostname string, port int, dbName string, username string, password string, args ...string) error {
+	switch command {
+	case "mysql":
+		return self.MysqlRunner.RunMysql(hostname, port, dbName, username, password, args...)
+
+	case "mysqldump":
+		return self.MysqlRunner.RunMysqlDump(hostname, port, dbName, username, password, args...)
+	}
+
+	panic(fmt.Errorf("Command not implemented: %s", command))
 }
 
 func (self *MysqlPlugin) showServices(cliConnection plugin.CliConnection, command string) {
