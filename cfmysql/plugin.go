@@ -35,7 +35,10 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 				Name:     "mysql",
 				HelpText: "Connect to a MySQL database service",
 				UsageDetails: plugin.Usage{
-					Usage: "Get a list of available databases:\n   cf mysql\n\n   Open a mysql client to a database:\n   cf mysql <service-name> [mysql args...]",
+					Usage: "Get a list of available databases:\n   " +
+						"cf mysql\n\n   " +
+						"Open a mysql client to a database:\n   " +
+						"cf mysql <service-name> [mysql args...]",
 				},
 			},
 		},
