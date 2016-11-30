@@ -30,12 +30,14 @@ type MysqlService struct {
 type SdkApiClient struct {
 	SshRunner  SshRunner
 	PortWaiter PortWaiter
+	HttpClient Http
 }
 
 func NewSdkApiClient() *SdkApiClient {
 	return &SdkApiClient{
 		SshRunner: new(CfSshRunner),
 		PortWaiter: NewPortWaiter(),
+		HttpClient: new(HttpWrapper),
 	}
 }
 
@@ -54,11 +56,22 @@ func (self *SdkApiClient) GetMysqlServices(cliConnection plugin.CliConnection) (
 }
 
 func (self *SdkApiClient) GetServiceBindings(cliConnection plugin.CliConnection) (*pluginResources.PaginatedServiceBindingResources, error) {
-	bindingLines, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "/v2/service_bindings")
+	endpoint, err := cliConnection.ApiEndpoint()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to retrieve service bindings: %s", err)
+		return nil, fmt.Errorf("Unable to get API endpoint %s", err)
 	}
-	return deserializeBindings(bindingLines)
+
+	accessToken, err := cliConnection.AccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get Access Token %s", err)
+	}
+
+	bindingsResp, err := self.HttpClient.Get(endpoint + "/v2/service_bindings", accessToken)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to call service bindings endpoint: %s", err)
+	}
+
+	return deserializeBindings(bindingsResp)
 }
 
 func (self *SdkApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
@@ -84,10 +97,9 @@ func (self *SdkApiClient) OpenSshTunnel(cliConnection plugin.CliConnection, toSe
 	self.PortWaiter.WaitUntilOpen(localPort)
 }
 
-func deserializeBindings(bindingLines []string) (*pluginResources.PaginatedServiceBindingResources, error) {
+func deserializeBindings(bindingResponse []byte) (*pluginResources.PaginatedServiceBindingResources, error) {
 	paginatedResources := new(pluginResources.PaginatedServiceBindingResources)
-	jsonResponse := []byte(strings.Join(bindingLines, "\n"))
-	err := json.Unmarshal(jsonResponse, paginatedResources)
+	err := json.Unmarshal(bindingResponse, paginatedResources)
 
 	if err != nil {
 		return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)

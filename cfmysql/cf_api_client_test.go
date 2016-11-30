@@ -18,25 +18,44 @@ var _ = Describe("CfSdkClient", func() {
 	var cliConnection *pluginfakes.FakeCliConnection
 	var sshRunner *cfmysqlfakes.FakeSshRunner
 	var portWaiter *cfmysqlfakes.FakePortWaiter
+	var mockHttp *cfmysqlfakes.FakeHttp
 
 	BeforeEach(func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
 		cliConnection.CliCommandWithoutTerminalOutputStub = mockCfCurl
 		sshRunner = new(cfmysqlfakes.FakeSshRunner)
 		portWaiter = new(cfmysqlfakes.FakePortWaiter)
+		mockHttp = new(cfmysqlfakes.FakeHttp)
+		mockHttp.GetStub = func(endpoint string, accessToken string) ([]byte, error) {
+			return test_resources.LoadResource("test_resources/service_bindings.json"), nil
+		}
+
 		apiClient = &SdkApiClient{
 			SshRunner: sshRunner,
 			PortWaiter: portWaiter,
+			HttpClient: mockHttp,
 		}
 	})
 
 	Context("GetMysqlServices: retrieving available MySQL services", func() {
 
 		It("Gets a list of bindings", func() {
+			cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
+			cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
+
 			paginatedResources, err := apiClient.GetServiceBindings(cliConnection)
 
 			Expect(err).To(BeNil())
 			Expect(paginatedResources.Resources).To(HaveLen(3))
+
+			Expect(cliConnection.AccessTokenCallCount()).To(Equal(1))
+			Expect(cliConnection.ApiEndpointCallCount()).To(Equal(1))
+
+			url, access_token := mockHttp.GetArgsForCall(0)
+
+			Expect(url).To(Equal("https://cf.api.url/v2/service_bindings"))
+			Expect(access_token).To(Equal("bearer my-secret-token"))
+
 		})
 
 		It("Gets a list of instances", func() {
@@ -44,6 +63,8 @@ var _ = Describe("CfSdkClient", func() {
 
 			Expect(err).To(BeNil())
 			Expect(paginatedResources.Resources).To(HaveLen(4))
+			Expect(cliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
+			Expect(cliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/v2/service_instances"}))
 		})
 
 		It("Gets a list of service instances and bindings", func() {
@@ -71,10 +92,6 @@ var _ = Describe("CfSdkClient", func() {
 				Username: "username-b",
 				Password: "password-b",
 			}))
-
-			Expect(cliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(2))
-			Expect(cliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/v2/service_bindings"}))
-			Expect(cliConnection.CliCommandWithoutTerminalOutputArgsForCall(1)).To(Equal([]string{"curl", "/v2/service_instances"}))
 		})
 	})
 
