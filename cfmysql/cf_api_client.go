@@ -56,22 +56,57 @@ func (self *SdkApiClient) GetMysqlServices(cliConnection plugin.CliConnection) (
 }
 
 func (self *SdkApiClient) GetServiceBindings(cliConnection plugin.CliConnection) (*pluginResources.PaginatedServiceBindingResources, error) {
-	endpoint, err := cliConnection.ApiEndpoint()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to get API endpoint %s", err)
-	}
-
-	accessToken, err := cliConnection.AccessToken()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to get Access Token %s", err)
-	}
-
-	bindingsResp, err := self.HttpClient.Get(endpoint + "/v2/service_bindings", accessToken)
+	bindingsResp, err := self.getFromCfApi("/v2/service_bindings", cliConnection)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to call service bindings endpoint: %s", err)
 	}
 
 	return deserializeBindings(bindingsResp)
+}
+
+func (self *SdkApiClient) getFromCfApi(path string, cliConnection plugin.CliConnection) ([]byte, error) {
+	endpoint, err := cliConnection.ApiEndpoint()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get API endpoint: %s", err)
+	}
+
+	accessToken, err := cliConnection.AccessToken()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get access token: %s", err)
+	}
+
+	return self.HttpClient.Get(endpoint + path, accessToken)
+}
+
+func deserializeBindings(bindingResponse []byte) (*pluginResources.PaginatedServiceBindingResources, error) {
+	paginatedResources := new(pluginResources.PaginatedServiceBindingResources)
+	err := json.Unmarshal(bindingResponse, paginatedResources)
+
+	if err != nil {
+		return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
+	}
+
+	return paginatedResources, nil
+}
+
+func (self *SdkApiClient) GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error) {
+	instanceResponse, err := self.getFromCfApi("/v2/service_instances", cliConnection)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
+	}
+
+	return deserializeInstances(instanceResponse)
+}
+
+func deserializeInstances(jsonResponse []byte) (*resources.PaginatedServiceInstanceResources, error) {
+	paginatedResources := new(resources.PaginatedServiceInstanceResources)
+	err := json.Unmarshal(jsonResponse, paginatedResources)
+
+	if err != nil {
+		return nil, fmt.Errorf("Unable to deserialize service instances: %s", err)
+	}
+
+	return paginatedResources, nil
 }
 
 func (self *SdkApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
@@ -95,38 +130,6 @@ func (self *SdkApiClient) OpenSshTunnel(cliConnection plugin.CliConnection, toSe
 	go self.SshRunner.OpenSshTunnel(cliConnection, toService, throughApp, localPort)
 
 	self.PortWaiter.WaitUntilOpen(localPort)
-}
-
-func deserializeBindings(bindingResponse []byte) (*pluginResources.PaginatedServiceBindingResources, error) {
-	paginatedResources := new(pluginResources.PaginatedServiceBindingResources)
-	err := json.Unmarshal(bindingResponse, paginatedResources)
-
-	if err != nil {
-		return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
-	}
-
-	return paginatedResources, nil
-}
-
-func (self *SdkApiClient) GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error) {
-	instanceLines, err := cliConnection.CliCommandWithoutTerminalOutput("curl", "/v2/service_instances")
-	if err != nil {
-		return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
-	}
-
-	return deserializeInstances(instanceLines)
-}
-
-func deserializeInstances(instanceLines []string) (*resources.PaginatedServiceInstanceResources, error) {
-	paginatedResources := new(resources.PaginatedServiceInstanceResources)
-	jsonResponse := []byte(strings.Join(instanceLines, "\n"))
-	err := json.Unmarshal(jsonResponse, paginatedResources)
-
-	if err != nil {
-		return nil, fmt.Errorf("Unable to deserialize service instances: %s", err)
-	}
-
-	return paginatedResources, nil
 }
 
 func getAvailableServices(bindings *pluginResources.PaginatedServiceBindingResources, instances *resources.PaginatedServiceInstanceResources) []MysqlService {

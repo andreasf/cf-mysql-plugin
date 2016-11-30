@@ -16,9 +16,9 @@ var _ = Describe("HttpWrapper", func() {
 			mockServer := ghttp.NewServer()
 			mockServer.AppendHandlers(ghttp.CombineHandlers(
 				ghttp.RespondWith(http.StatusOK, "response body"),
-				ghttp.VerifyRequest("GET", "/the/expected/path")),
+				ghttp.VerifyRequest("GET", "/the/expected/path"),
 				ghttp.VerifyHeaderKV("Authorization", "the-authorization-value"),
-			)
+			))
 
 			httpWrapper := new(cfmysql.HttpWrapper)
 

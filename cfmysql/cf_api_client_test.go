@@ -22,12 +22,22 @@ var _ = Describe("CfSdkClient", func() {
 
 	BeforeEach(func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
-		cliConnection.CliCommandWithoutTerminalOutputStub = mockCfCurl
+		cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
+		cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
+
 		sshRunner = new(cfmysqlfakes.FakeSshRunner)
 		portWaiter = new(cfmysqlfakes.FakePortWaiter)
+
 		mockHttp = new(cfmysqlfakes.FakeHttp)
-		mockHttp.GetStub = func(endpoint string, accessToken string) ([]byte, error) {
-			return test_resources.LoadResource("test_resources/service_bindings.json"), nil
+		mockHttp.GetStub = func(url string, accessToken string) ([]byte, error) {
+			switch url {
+			case "https://cf.api.url/v2/service_bindings":
+				return test_resources.LoadResource("test_resources/service_bindings.json"), nil
+			case "https://cf.api.url/v2/service_instances":
+				return test_resources.LoadResource("test_resources/service_instances.json"), nil
+			default:
+				return nil, fmt.Errorf("URL not handled in mock: %s", url)
+			}
 		}
 
 		apiClient = &SdkApiClient{
@@ -38,11 +48,7 @@ var _ = Describe("CfSdkClient", func() {
 	})
 
 	Context("GetMysqlServices: retrieving available MySQL services", func() {
-
 		It("Gets a list of bindings", func() {
-			cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
-			cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
-
 			paginatedResources, err := apiClient.GetServiceBindings(cliConnection)
 
 			Expect(err).To(BeNil())
@@ -51,20 +57,29 @@ var _ = Describe("CfSdkClient", func() {
 			Expect(cliConnection.AccessTokenCallCount()).To(Equal(1))
 			Expect(cliConnection.ApiEndpointCallCount()).To(Equal(1))
 
+			Expect(mockHttp.GetCallCount()).To(Equal(1))
 			url, access_token := mockHttp.GetArgsForCall(0)
-
 			Expect(url).To(Equal("https://cf.api.url/v2/service_bindings"))
 			Expect(access_token).To(Equal("bearer my-secret-token"))
 
 		})
 
 		It("Gets a list of instances", func() {
+			cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
+			cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
+
 			paginatedResources, err := apiClient.GetServiceInstances(cliConnection)
 
 			Expect(err).To(BeNil())
 			Expect(paginatedResources.Resources).To(HaveLen(4))
-			Expect(cliConnection.CliCommandWithoutTerminalOutputCallCount()).To(Equal(1))
-			Expect(cliConnection.CliCommandWithoutTerminalOutputArgsForCall(0)).To(Equal([]string{"curl", "/v2/service_instances"}))
+
+			Expect(cliConnection.AccessTokenCallCount()).To(Equal(1))
+			Expect(cliConnection.ApiEndpointCallCount()).To(Equal(1))
+
+			Expect(mockHttp.GetCallCount()).To(Equal(1))
+			url, access_token := mockHttp.GetArgsForCall(0)
+			Expect(url).To(Equal("https://cf.api.url/v2/service_instances"))
+			Expect(access_token).To(Equal("bearer my-secret-token"))
 		})
 
 		It("Gets a list of service instances and bindings", func() {
@@ -152,7 +167,6 @@ var _ = Describe("CfSdkClient", func() {
 
 			It("Runs the SSH runner in a goroutine", func(done Done) {
 				cliConnection := new(pluginfakes.FakeCliConnection)
-				cliConnection.CliCommandWithoutTerminalOutputStub = mockCfCurl
 				sshRunner := new(cfmysqlfakes.FakeSshRunner)
 				portWaiter := new(cfmysqlfakes.FakePortWaiter)
 				apiClient := &SdkApiClient{
@@ -160,7 +174,6 @@ var _ = Describe("CfSdkClient", func() {
 					PortWaiter: portWaiter,
 				}
 
-				cliConnection.CliCommandWithoutTerminalOutputStub = nil
 				sshRunner.OpenSshTunnelStub = notifyWhenGoroutineCalled
 
 				apiClient.OpenSshTunnel(cliConnection, service, "app-name", 4242)
@@ -186,28 +199,3 @@ var _ = Describe("CfSdkClient", func() {
 		})
 	})
 })
-
-func mockCfCurl(args... string) ([]string, error) {
-	if SliceEquals(args, []string{"curl", "/v2/service_bindings"}) {
-		return test_resources.LoadResourceLines("test_resources/service_bindings.json"), nil
-	}
-	if SliceEquals(args, []string{"curl", "/v2/service_instances"}) {
-		return test_resources.LoadResourceLines("test_resources/service_instances.json"), nil
-	}
-
-	return nil, fmt.Errorf("No mock defined for %s", args)
-}
-
-func SliceEquals(a []string, b []string) bool {
-	if len(a) != len(b) {
-		return false
-	}
-
-	for i := 0; i < len(a); i++ {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-
-	return true
-}
