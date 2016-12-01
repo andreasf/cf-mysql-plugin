@@ -41,18 +41,29 @@ func NewSdkApiClient() *SdkApiClient {
 	}
 }
 
+type BindingResult struct {
+	Bindings *pluginResources.PaginatedServiceBindingResources
+	Err error
+}
+
 func (self *SdkApiClient) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
-	bindings, err := self.GetServiceBindings(cliConnection)
-	if err != nil {
-		return nil, err
-	}
+	bindingChan := make(chan BindingResult, 0)
+	go func() {
+		bindings, err := self.GetServiceBindings(cliConnection)
+		bindingChan <- BindingResult{Bindings: bindings, Err: err}
+	}()
 
 	instances, err := self.GetServiceInstances(cliConnection)
 	if err != nil {
 		return nil, err
 	}
 
-	return getAvailableServices(bindings, instances), nil
+	bindingResult := <- bindingChan
+	if bindingResult.Err != nil {
+		return nil, err
+	}
+
+	return getAvailableServices(bindingResult.Bindings, instances), nil
 }
 
 func (self *SdkApiClient) GetServiceBindings(cliConnection plugin.CliConnection) (*pluginResources.PaginatedServiceBindingResources, error) {

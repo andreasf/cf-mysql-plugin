@@ -5,6 +5,7 @@ import (
 	"io"
 	"fmt"
 	"os"
+	"code.cloudfoundry.org/cli/plugin/models"
 )
 
 type MysqlPlugin struct {
@@ -88,7 +89,18 @@ func (self *MysqlPlugin) setErrorExit() {
 	self.exitCode = 1
 }
 
+type StartedAppsResult struct {
+	Apps []plugin_models.GetAppsModel
+	Err error
+}
+
 func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command string, dbName string, mysqlArgs []string) {
+	appsChan := make(chan StartedAppsResult, 0)
+	go func() {
+		startedApps, err := self.ApiClient.GetStartedApps(cliConnection)
+		appsChan <- StartedAppsResult{Apps: startedApps, Err: err}
+	}()
+
 	services, err := self.ApiClient.GetMysqlServices(cliConnection)
 	if err != nil {
 		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve services: %s\n", err)
@@ -104,21 +116,21 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 		return
 	}
 
-	startedApps, err := self.ApiClient.GetStartedApps(cliConnection)
-	if err != nil {
-		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve started apps: %s\n", err)
+	appsResult := <- appsChan
+	if appsResult.Err != nil {
+		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve started apps: %s\n", appsResult.Err)
 		self.setErrorExit()
 		return
 	}
 
-	if len(startedApps) == 0 {
+	if len(appsResult.Apps) == 0 {
 		fmt.Fprintf(self.Err, "FAILED\nUnable to connect to '%s': no started apps in current space\n", dbName)
 		self.setErrorExit()
 		return
 	}
 
 	tunnelPort := self.PortFinder.GetPort()
-	self.ApiClient.OpenSshTunnel(cliConnection, *service, startedApps[0].Name, tunnelPort)
+	self.ApiClient.OpenSshTunnel(cliConnection, *service, appsResult.Apps[0].Name, tunnelPort)
 
 	err = self.runClient(command, "127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, mysqlArgs...)
 	if err != nil {
