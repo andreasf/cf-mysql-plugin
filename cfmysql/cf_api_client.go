@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	pluginResources "github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
 	. "code.cloudfoundry.org/cli/plugin/models"
+	"strconv"
 )
 
 //go:generate counterfeiter . ApiClient
@@ -60,7 +61,7 @@ func (self *SdkApiClient) GetMysqlServices(cliConnection plugin.CliConnection) (
 
 	bindingResult := <- bindingChan
 	if bindingResult.Err != nil {
-		return nil, err
+		return nil, bindingResult.Err
 	}
 
 	return getAvailableServices(bindingResult.Bindings, instances), nil
@@ -95,6 +96,25 @@ func deserializeBindings(bindingResponse []byte) (*pluginResources.PaginatedServ
 
 	if err != nil {
 		return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
+	}
+
+	// port might be int or string, we don't know upfront.
+	// use index because range would create copies
+	for i := range paginatedResources.Resources {
+		credentials := &paginatedResources.Resources[i].Entity.Credentials
+
+		var portInt int
+		var portString string
+
+		err = json.Unmarshal(credentials.RawPort, &portString)
+		if err != nil {
+			err = json.Unmarshal(credentials.RawPort, &portInt)
+			if err != nil {
+				return nil, err
+			}
+			portString = strconv.Itoa(portInt)
+		}
+		credentials.Port = portString
 	}
 
 	return paginatedResources, nil

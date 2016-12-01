@@ -21,7 +21,7 @@ var _ = Describe("Plugin", func() {
 			Expect(mysqlPlugin.GetMetadata().Version).To(Equal(plugin.VersionType{
 				Major: 1,
 				Minor: 3,
-				Build: 1,
+				Build: 2,
 			}))
 		})
 	})

@@ -83,7 +83,34 @@
         "app_url": "/v2/apps/app-guid-b",
         "service_instance_url": "/v2/service_instances/service-instance-guid-d"
       }
+    },
+    {
+      "metadata": {
+        "guid": "guid-service-binding-e",
+        "url": "/v2/service_bindings/guid-service-binding-e",
+        "created_at": "2016-11-15T09:22:15Z",
+        "updated_at": null
+      },
+      "entity": {
+        "app_guid": "app-guid-e",
+        "service_instance_guid": "service-instance-guid-e",
+        "credentials": {
+          "jdbcUrl": "jdbc:mysql://database-e.host/dbname-e?user=username-e&password=password-e",
+          "uri": "mysql://username-e:password-e@database-e.host:3306/dbname-e?reconnect=true",
+          "name": "dbname-e",
+          "hostname": "database-e.host",
+          "port": 54321,
+          "username": "username-e",
+          "password": "password-e"
+        },
+        "binding_options": {},
+        "gateway_data": null,
+        "gateway_name": "",
+        "syslog_drain_url": null,
+        "volume_mounts": [],
+        "app_url": "/v2/apps/app-guid-e",
+        "service_instance_url": "/v2/service_instances/service-instance-guid-b"
+      }
     }
-
   ]
 }

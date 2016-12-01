@@ -1,6 +1,9 @@
 package resources
 
-import "code.cloudfoundry.org/cli/cf/api/resources"
+import (
+	"code.cloudfoundry.org/cli/cf/api/resources"
+	"encoding/json"
+)
 
 type PaginatedServiceBindingResources struct {
 	TotalResults int `json:"total_results"`
@@ -22,7 +25,8 @@ type MysqlCredentials struct {
 	Uri string `json:"uri"`
 	DbName string `json:"name"`
 	Hostname string `json:"hostname"`
-	Port string `json:"port"`
+	Port string
+	RawPort json.RawMessage `json:"port"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
