@@ -29,9 +29,10 @@ type MysqlService struct {
 }
 
 type CfServiceImpl struct {
-	SshRunner  SshRunner
-	PortWaiter PortWaiter
+	ApiClient  ApiClient
 	HttpClient Http
+	PortWaiter PortWaiter
+	SshRunner  SshRunner
 }
 
 func NewCfService() *CfServiceImpl {
@@ -44,7 +45,7 @@ func NewCfService() *CfServiceImpl {
 
 type BindingResult struct {
 	Bindings *pluginResources.PaginatedServiceBindingResources
-	Err error
+	Err      error
 }
 
 func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
@@ -59,7 +60,7 @@ func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) 
 		return nil, err
 	}
 
-	bindingResult := <- bindingChan
+	bindingResult := <-bindingChan
 	if bindingResult.Err != nil {
 		return nil, bindingResult.Err
 	}
@@ -143,20 +144,7 @@ func deserializeInstances(jsonResponse []byte) (*resources.PaginatedServiceInsta
 }
 
 func (self *CfServiceImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
-	apps, err := cliConnection.GetApps()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to retrieve apps: %s", err)
-	}
-
-	startedApps := make([]GetAppsModel, 0, len(apps))
-
-	for _, app := range (apps) {
-		if app.State == "started" {
-			startedApps = append(startedApps, app)
-		}
-	}
-
-	return startedApps, nil
+	return self.ApiClient.GetStartedApps(cliConnection)
 }
 
 func (self *CfServiceImpl) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {

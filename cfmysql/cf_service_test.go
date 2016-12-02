@@ -14,6 +14,7 @@ import (
 )
 
 var _ = Describe("CfSdkClient", func() {
+	var apiClient *cfmysqlfakes.FakeApiClient
 	var service *CfServiceImpl
 	var cliConnection *pluginfakes.FakeCliConnection
 	var sshRunner *cfmysqlfakes.FakeSshRunner
@@ -25,6 +26,7 @@ var _ = Describe("CfSdkClient", func() {
 		cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
 		cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
 
+		apiClient = new(cfmysqlfakes.FakeApiClient)
 		sshRunner = new(cfmysqlfakes.FakeSshRunner)
 		portWaiter = new(cfmysqlfakes.FakePortWaiter)
 
@@ -41,6 +43,7 @@ var _ = Describe("CfSdkClient", func() {
 		}
 
 		service = &CfServiceImpl{
+			ApiClient: apiClient,
 			SshRunner: sshRunner,
 			PortWaiter: portWaiter,
 			HttpClient: mockHttp,
@@ -113,40 +116,26 @@ var _ = Describe("CfSdkClient", func() {
 	})
 
 	Context("GetStartedApps", func() {
-		Context("When the API returns the list of apps", func() {
-			app1 := plugin_models.GetAppsModel{
-				Name: "app-name-a",
-				State: "stopped",
+		It("delegates the call to ApiClient", func() {
+			expectedApps := []plugin_models.GetAppsModel{
+				{
+					Name: "foo",
+				},
+				{
+					Name: "bar",
+				},
 			}
-			app2 := plugin_models.GetAppsModel{
-				Name: "app-name-b",
-				State: "started",
-			}
-			app3 := plugin_models.GetAppsModel{
-				Name: "app-name-c",
-				State: "started",
-			}
+			expectedErr := errors.New("baz")
 
-			It("Returns the list of started apps", func() {
-				cliConnection.GetAppsReturns([]plugin_models.GetAppsModel{app1, app2, app3}, nil)
+			apiClient.GetStartedAppsReturns(expectedApps, expectedErr)
 
-				startedApps, err := service.GetStartedApps(cliConnection)
+			startedApps, err := service.GetStartedApps(cliConnection)
 
-				Expect(err).To(BeNil())
-				Expect(startedApps).To(HaveLen(2))
-				Expect(startedApps[0].Name).To(Equal("app-name-b"))
-				Expect(startedApps[1].Name).To(Equal("app-name-c"))
-			})
-		})
+			Expect(startedApps).To(Equal(expectedApps))
+			Expect(err).To(Equal(expectedErr))
 
-		Context("When the API returns an error", func() {
-			It("Returns an error", func() {
-				cliConnection.GetAppsReturns(nil, errors.New("PC LOAD LETTER"))
-
-				_, err := service.GetStartedApps(cliConnection)
-
-				Expect(err).To(Equal(errors.New("Unable to retrieve apps: PC LOAD LETTER")))
-			})
+			Expect(apiClient.GetStartedAppsCallCount()).To(Equal(1))
+			Expect(apiClient.GetStartedAppsArgsForCall(0)).To(Equal(cliConnection))
 		})
 	})
 
