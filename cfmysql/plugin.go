@@ -12,7 +12,7 @@ type MysqlPlugin struct {
 	In          io.Reader
 	Out         io.Writer
 	Err         io.Writer
-	ApiClient   ApiClient
+	CfService   CfService
 	MysqlRunner MysqlRunner
 	PortFinder  PortFinder
 	exitCode    int
@@ -97,11 +97,11 @@ type StartedAppsResult struct {
 func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command string, dbName string, mysqlArgs []string) {
 	appsChan := make(chan StartedAppsResult, 0)
 	go func() {
-		startedApps, err := self.ApiClient.GetStartedApps(cliConnection)
+		startedApps, err := self.CfService.GetStartedApps(cliConnection)
 		appsChan <- StartedAppsResult{Apps: startedApps, Err: err}
 	}()
 
-	services, err := self.ApiClient.GetMysqlServices(cliConnection)
+	services, err := self.CfService.GetMysqlServices(cliConnection)
 	if err != nil {
 		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve services: %s\n", err)
 		self.setErrorExit()
@@ -130,7 +130,7 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 	}
 
 	tunnelPort := self.PortFinder.GetPort()
-	self.ApiClient.OpenSshTunnel(cliConnection, *service, appsResult.Apps[0].Name, tunnelPort)
+	self.CfService.OpenSshTunnel(cliConnection, *service, appsResult.Apps[0].Name, tunnelPort)
 
 	err = self.runClient(command, "127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, mysqlArgs...)
 	if err != nil {
@@ -161,7 +161,7 @@ func (self *MysqlPlugin) runClient(command string, hostname string, port int, db
 }
 
 func (self *MysqlPlugin) showServices(cliConnection plugin.CliConnection, command string) {
-	services, err := self.ApiClient.GetMysqlServices(cliConnection)
+	services, err := self.CfService.GetMysqlServices(cliConnection)
 	if err != nil {
 		fmt.Fprintf(self.Err, "Unable to retrieve services: %s\n", err)
 		self.setErrorExit()
@@ -184,7 +184,7 @@ func NewPlugin() *MysqlPlugin {
 		In: os.Stdin,
 		Out: os.Stdout,
 		Err: os.Stderr,
-		ApiClient: NewSdkApiClient(),
+		CfService: NewCfService(),
 		PortFinder: new(FreePortFinder),
 		MysqlRunner: NewMysqlRunner(),
 	}

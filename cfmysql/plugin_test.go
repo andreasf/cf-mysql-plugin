@@ -56,11 +56,11 @@ var _ = Describe("Plugin", func() {
 
 			It("Lists the available MySQL databases", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say("MySQL databases bound to an app:\n\ndatabase-a\ndatabase-b\n"))
 				Expect(mocks.In).To(gbytes.Say(""))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
@@ -71,11 +71,11 @@ var _ = Describe("Plugin", func() {
 			It("Tells the user that databases must be bound to a started app", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{}, nil)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say(""))
 				Expect(mocks.Err).To(gbytes.Say("No MySQL databases available. Please bind your database services to a started app to make them available to 'cf mysql'."))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
@@ -86,11 +86,11 @@ var _ = Describe("Plugin", func() {
 			It("Shows an error message", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns(nil, fmt.Errorf("foo"))
+				mocks.CfService.GetMysqlServicesReturns(nil, fmt.Errorf("foo"))
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say(""))
 				Expect(mocks.Err).To(gbytes.Say("Unable to retrieve services: foo\n"))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
@@ -130,18 +130,18 @@ var _ = Describe("Plugin", func() {
 			It("Opens an SSH tunnel through a started app", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.ApiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
 				mocks.PortFinder.GetPortReturns(2342)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "database-a"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.ApiClient.GetStartedAppsCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetStartedAppsCallCount()).To(Equal(1))
 				Expect(mocks.PortFinder.GetPortCallCount()).To(Equal(1))
-				Expect(mocks.ApiClient.OpenSshTunnelCallCount()).To(Equal(1))
+				Expect(mocks.CfService.OpenSshTunnelCallCount()).To(Equal(1))
 
-				calledCliConnection, calledService, calledAppName, localPort := mocks.ApiClient.OpenSshTunnelArgsForCall(0)
+				calledCliConnection, calledService, calledAppName, localPort := mocks.CfService.OpenSshTunnelArgsForCall(0)
 				Expect(calledCliConnection).To(Equal(mocks.CliConnection))
 				Expect(calledService).To(Equal(serviceA))
 				Expect(calledAppName).To(Equal("app-name"))
@@ -151,8 +151,8 @@ var _ = Describe("Plugin", func() {
 			It("Opens a MySQL client connecting through the tunnel", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.ApiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
 				mocks.PortFinder.GetPortReturns(2342)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "database-a"})
@@ -172,8 +172,8 @@ var _ = Describe("Plugin", func() {
 				It("Passes the arguments to mysql", func() {
 					mysqlPlugin, mocks := NewPluginAndMocks()
 
-					mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-					mocks.ApiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+					mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+					mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
 					mocks.PortFinder.GetPortReturns(2342)
 
 					mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "database-a", "--foo", "bar", "--baz"})
@@ -196,11 +196,11 @@ var _ = Describe("Plugin", func() {
 			It("Shows an error message and exits with 1", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{}, nil)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "db-name"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say(""))
 				Expect(mocks.Err).To(gbytes.Say("^FAILED\nService 'db-name' is not bound to an app, not a MySQL database or does not exist in the current space.\n$"))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
@@ -211,11 +211,11 @@ var _ = Describe("Plugin", func() {
 			It("Shows an error message and exits with 1", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns(nil, fmt.Errorf("PC LOAD LETTER"))
+				mocks.CfService.GetMysqlServicesReturns(nil, fmt.Errorf("PC LOAD LETTER"))
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "db-name"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say(""))
 				Expect(mocks.Err).To(gbytes.Say("^FAILED\nUnable to retrieve services: PC LOAD LETTER\n$"))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
@@ -226,13 +226,13 @@ var _ = Describe("Plugin", func() {
 			It("Shows an error message and exits with 1", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.ApiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{}, nil)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "database-a"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.ApiClient.GetStartedAppsCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetStartedAppsCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say("^$"))
 				Expect(mocks.Err).To(gbytes.Say("^FAILED\nUnable to connect to 'database-a': no started apps in current space\n$"))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
@@ -243,13 +243,13 @@ var _ = Describe("Plugin", func() {
 			It("Shows an error message and exits with 1", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.ApiClient.GetStartedAppsReturns(nil, fmt.Errorf("PC LOAD LETTER"))
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				mocks.CfService.GetStartedAppsReturns(nil, fmt.Errorf("PC LOAD LETTER"))
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "database-a"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.ApiClient.GetStartedAppsCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetStartedAppsCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say(""))
 				Expect(mocks.Err).To(gbytes.Say("^FAILED\nUnable to retrieve started apps: PC LOAD LETTER\n$"))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
@@ -289,11 +289,11 @@ var _ = Describe("Plugin", func() {
 			It("Lists the available MySQL databases", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say("MySQL databases bound to an app:\n\ndatabase-a\ndatabase-b\n"))
 				Expect(mocks.Err).To(gbytes.Say(""))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
@@ -304,11 +304,11 @@ var _ = Describe("Plugin", func() {
 			It("Tells the user that databases must be bound to a started app", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{}, nil)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say(""))
 				Expect(mocks.Err).To(gbytes.Say("No MySQL databases available. Please bind your database services to a started app to make them available to 'cf mysqldump'."))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
@@ -319,11 +319,11 @@ var _ = Describe("Plugin", func() {
 			It("Shows an error message", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns(nil, fmt.Errorf("foo"))
+				mocks.CfService.GetMysqlServicesReturns(nil, fmt.Errorf("foo"))
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
 				Expect(mocks.Out).To(gbytes.Say(""))
 				Expect(mocks.Err).To(gbytes.Say("Unable to retrieve services: foo\n"))
 				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
@@ -363,18 +363,18 @@ var _ = Describe("Plugin", func() {
 			It("Opens an SSH tunnel through a started app", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.ApiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
 				mocks.PortFinder.GetPortReturns(2342)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump", "database-a"})
 
-				Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.ApiClient.GetStartedAppsCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
+				Expect(mocks.CfService.GetStartedAppsCallCount()).To(Equal(1))
 				Expect(mocks.PortFinder.GetPortCallCount()).To(Equal(1))
-				Expect(mocks.ApiClient.OpenSshTunnelCallCount()).To(Equal(1))
+				Expect(mocks.CfService.OpenSshTunnelCallCount()).To(Equal(1))
 
-				calledCliConnection, calledService, calledAppName, localPort := mocks.ApiClient.OpenSshTunnelArgsForCall(0)
+				calledCliConnection, calledService, calledAppName, localPort := mocks.CfService.OpenSshTunnelArgsForCall(0)
 				Expect(calledCliConnection).To(Equal(mocks.CliConnection))
 				Expect(calledService).To(Equal(serviceA))
 				Expect(calledAppName).To(Equal("app-name"))
@@ -384,8 +384,8 @@ var _ = Describe("Plugin", func() {
 			It("Opens mysqldump connecting through the tunnel", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
-				mocks.ApiClient.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.ApiClient.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
+				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
 				mocks.PortFinder.GetPortReturns(2342)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump", "database-a"})
@@ -409,7 +409,7 @@ var _ = Describe("Plugin", func() {
 
 			mysqlPlugin.Run(mocks.CliConnection, []string{"CLI-MESSAGE-UNINSTALL"})
 
-			Expect(mocks.ApiClient.GetMysqlServicesCallCount()).To(Equal(0))
+			Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(0))
 			Expect(mocks.Out).To(gbytes.Say("^$"))
 			Expect(mocks.Err).To(gbytes.Say("^$"))
 			Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
@@ -421,7 +421,7 @@ type Mocks struct {
 	In            *gbytes.Buffer
 	Out           *gbytes.Buffer
 	Err           *gbytes.Buffer
-	ApiClient     *cfmysqlfakes.FakeApiClient
+	CfService     *cfmysqlfakes.FakeCfService
 	PortFinder    *cfmysqlfakes.FakePortFinder
 	CliConnection *pluginfakes.FakeCliConnection
 	MysqlRunner   *cfmysqlfakes.FakeMysqlRunner
@@ -432,7 +432,7 @@ func NewPluginAndMocks() (MysqlPlugin, Mocks) {
 		In: gbytes.NewBuffer(),
 		Out: gbytes.NewBuffer(),
 		Err: gbytes.NewBuffer(),
-		ApiClient: new(cfmysqlfakes.FakeApiClient),
+		CfService: new(cfmysqlfakes.FakeCfService),
 		CliConnection: new(pluginfakes.FakeCliConnection),
 		MysqlRunner: new(cfmysqlfakes.FakeMysqlRunner),
 		PortFinder: new(cfmysqlfakes.FakePortFinder),
@@ -442,7 +442,7 @@ func NewPluginAndMocks() (MysqlPlugin, Mocks) {
 		In: mocks.In,
 		Out: mocks.Out,
 		Err: mocks.Err,
-		ApiClient: mocks.ApiClient,
+		CfService: mocks.CfService,
 		MysqlRunner: mocks.MysqlRunner,
 		PortFinder: mocks.PortFinder,
 	}

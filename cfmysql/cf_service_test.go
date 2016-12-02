@@ -14,7 +14,7 @@ import (
 )
 
 var _ = Describe("CfSdkClient", func() {
-	var apiClient *SdkApiClient
+	var service *CfServiceImpl
 	var cliConnection *pluginfakes.FakeCliConnection
 	var sshRunner *cfmysqlfakes.FakeSshRunner
 	var portWaiter *cfmysqlfakes.FakePortWaiter
@@ -40,7 +40,7 @@ var _ = Describe("CfSdkClient", func() {
 			}
 		}
 
-		apiClient = &SdkApiClient{
+		service = &CfServiceImpl{
 			SshRunner: sshRunner,
 			PortWaiter: portWaiter,
 			HttpClient: mockHttp,
@@ -49,7 +49,7 @@ var _ = Describe("CfSdkClient", func() {
 
 	Context("GetMysqlServices: retrieving available MySQL services", func() {
 		It("Gets a list of bindings", func() {
-			paginatedResources, err := apiClient.GetServiceBindings(cliConnection)
+			paginatedResources, err := service.GetServiceBindings(cliConnection)
 
 			Expect(err).To(BeNil())
 			Expect(paginatedResources.Resources).To(HaveLen(5))
@@ -70,7 +70,7 @@ var _ = Describe("CfSdkClient", func() {
 			cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
 			cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
 
-			paginatedResources, err := apiClient.GetServiceInstances(cliConnection)
+			paginatedResources, err := service.GetServiceInstances(cliConnection)
 
 			Expect(err).To(BeNil())
 			Expect(paginatedResources.Resources).To(HaveLen(4))
@@ -85,7 +85,7 @@ var _ = Describe("CfSdkClient", func() {
 		})
 
 		It("Gets a list of service instances and bindings", func() {
-			services, err := apiClient.GetMysqlServices(cliConnection)
+			services, err := service.GetMysqlServices(cliConnection)
 
 			Expect(err).To(BeNil())
 			Expect(services).To(HaveLen(2))
@@ -130,7 +130,7 @@ var _ = Describe("CfSdkClient", func() {
 			It("Returns the list of started apps", func() {
 				cliConnection.GetAppsReturns([]plugin_models.GetAppsModel{app1, app2, app3}, nil)
 
-				startedApps, err := apiClient.GetStartedApps(cliConnection)
+				startedApps, err := service.GetStartedApps(cliConnection)
 
 				Expect(err).To(BeNil())
 				Expect(startedApps).To(HaveLen(2))
@@ -143,7 +143,7 @@ var _ = Describe("CfSdkClient", func() {
 			It("Returns an error", func() {
 				cliConnection.GetAppsReturns(nil, errors.New("PC LOAD LETTER"))
 
-				_, err := apiClient.GetStartedApps(cliConnection)
+				_, err := service.GetStartedApps(cliConnection)
 
 				Expect(err).To(Equal(errors.New("Unable to retrieve apps: PC LOAD LETTER")))
 			})
@@ -151,7 +151,7 @@ var _ = Describe("CfSdkClient", func() {
 	})
 
 	Context("OpenSshTunnel", func() {
-		service := MysqlService{
+		mysqlService := MysqlService{
 			Name: "database-a",
 			AppName: "",
 			Hostname: "database-a.host",
@@ -171,14 +171,14 @@ var _ = Describe("CfSdkClient", func() {
 				cliConnection := new(pluginfakes.FakeCliConnection)
 				sshRunner := new(cfmysqlfakes.FakeSshRunner)
 				portWaiter := new(cfmysqlfakes.FakePortWaiter)
-				apiClient := &SdkApiClient{
+				service := &CfServiceImpl{
 					SshRunner: sshRunner,
 					PortWaiter: portWaiter,
 				}
 
 				sshRunner.OpenSshTunnelStub = notifyWhenGoroutineCalled
 
-				apiClient.OpenSshTunnel(cliConnection, service, "app-name", 4242)
+				service.OpenSshTunnel(cliConnection, mysqlService, "app-name", 4242)
 				<-openSshTunnelCalled
 				close(done)
 
@@ -186,14 +186,14 @@ var _ = Describe("CfSdkClient", func() {
 
 				calledCliConnection, calledService, calledAppName, calledPort := sshRunner.OpenSshTunnelArgsForCall(0)
 				Expect(calledCliConnection).To(Equal(cliConnection))
-				Expect(calledService).To(Equal(service))
+				Expect(calledService).To(Equal(mysqlService))
 				Expect(calledAppName).To(Equal("app-name"))
 				Expect(calledPort).To(Equal(4242))
 			}, 0.2)
 
 			It("Blocks until the tunnel is open", func() {
 				cliConnection.CliCommandWithoutTerminalOutputStub = nil
-				apiClient.OpenSshTunnel(cliConnection, service, "app-name", 4242)
+				service.OpenSshTunnel(cliConnection, mysqlService, "app-name", 4242)
 
 				Expect(portWaiter.WaitUntilOpenCallCount()).To(Equal(1))
 				Expect(portWaiter.WaitUntilOpenArgsForCall(0)).To(Equal(4242))
