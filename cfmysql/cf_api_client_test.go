@@ -52,7 +52,7 @@ var _ = Describe("CfSdkClient", func() {
 			paginatedResources, err := apiClient.GetServiceBindings(cliConnection)
 
 			Expect(err).To(BeNil())
-			Expect(paginatedResources.Resources).To(HaveLen(4))
+			Expect(paginatedResources.Resources).To(HaveLen(5))
 			Expect(paginatedResources.Resources[0].Entity.Credentials.Port).To(Equal("3306"))
 			Expect(paginatedResources.Resources[3].Entity.Credentials.Port).To(Equal("54321"))
 

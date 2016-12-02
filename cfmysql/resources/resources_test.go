@@ -35,7 +35,7 @@ var _ = Describe("Resources", func() {
 				err := json.Unmarshal(test_resources.LoadResource("../test_resources/service_bindings.json"), paginatedResources)
 
 				Expect(err).To(BeNil())
-				Expect(paginatedResources.Resources).To(HaveLen(4))
+				Expect(paginatedResources.Resources).To(HaveLen(5))
 
 				Expect(paginatedResources.Resources[0].Entity.ServiceInstanceGUID).To(Equal("service-instance-guid-a"))
 				Expect(paginatedResources.Resources[0].Entity.Credentials.Uri).To(Equal("mysql://username-a:password-a@database-a.host:3306/dbname-a?reconnect=true"))

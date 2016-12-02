@@ -103,18 +103,20 @@ func deserializeBindings(bindingResponse []byte) (*pluginResources.PaginatedServ
 	for i := range paginatedResources.Resources {
 		credentials := &paginatedResources.Resources[i].Entity.Credentials
 
-		var portInt int
-		var portString string
+		if len(credentials.RawPort) > 0 {
+			var portInt int
+			var portString string
 
-		err = json.Unmarshal(credentials.RawPort, &portString)
-		if err != nil {
-			err = json.Unmarshal(credentials.RawPort, &portInt)
+			err = json.Unmarshal(credentials.RawPort, &portString)
 			if err != nil {
-				return nil, err
+				err = json.Unmarshal(credentials.RawPort, &portInt)
+				if err != nil {
+					return nil, err
+				}
+				portString = strconv.Itoa(portInt)
 			}
-			portString = strconv.Itoa(portInt)
+			credentials.Port = portString
 		}
-		credentials.Port = portString
 	}
 
 	return paginatedResources, nil
