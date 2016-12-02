@@ -11,6 +11,7 @@ import (
 	"code.cloudfoundry.org/cli/cf/errors"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"code.cloudfoundry.org/cli/plugin"
+	"code.cloudfoundry.org/cli/cf/api/resources"
 )
 
 var _ = Describe("CfSdkClient", func() {
@@ -35,8 +36,6 @@ var _ = Describe("CfSdkClient", func() {
 			switch url {
 			case "https://cf.api.url/v2/service_bindings":
 				return test_resources.LoadResource("test_resources/service_bindings.json"), nil
-			case "https://cf.api.url/v2/service_instances":
-				return test_resources.LoadResource("test_resources/service_instances.json"), nil
 			default:
 				return nil, fmt.Errorf("URL not handled in mock: %s", url)
 			}
@@ -69,26 +68,13 @@ var _ = Describe("CfSdkClient", func() {
 
 		})
 
-		It("Gets a list of instances", func() {
-			cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
-			cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
-
-			paginatedResources, err := service.GetServiceInstances(cliConnection)
-
-			Expect(err).To(BeNil())
-			Expect(paginatedResources.Resources).To(HaveLen(4))
-
-			Expect(cliConnection.AccessTokenCallCount()).To(Equal(1))
-			Expect(cliConnection.ApiEndpointCallCount()).To(Equal(1))
-
-			Expect(mockHttp.GetCallCount()).To(Equal(1))
-			url, access_token := mockHttp.GetArgsForCall(0)
-			Expect(url).To(Equal("https://cf.api.url/v2/service_instances"))
-			Expect(access_token).To(Equal("bearer my-secret-token"))
-		})
-
 		It("Gets a list of service instances and bindings", func() {
+			apiClient.GetServiceInstancesReturns(mockInstances(), nil)
+
 			services, err := service.GetMysqlServices(cliConnection)
+
+			Expect(apiClient.GetServiceInstancesCallCount()).To(Equal(1))
+			Expect(apiClient.GetServiceInstancesArgsForCall(0)).To(Equal(cliConnection))
 
 			Expect(err).To(BeNil())
 			Expect(services).To(HaveLen(2))
@@ -190,3 +176,52 @@ var _ = Describe("CfSdkClient", func() {
 		})
 	})
 })
+
+func mockInstances() *resources.PaginatedServiceInstanceResources {
+	return &resources.PaginatedServiceInstanceResources{
+		TotalResults: 3,
+		Resources: []resources.ServiceInstanceResource{
+			{
+				Resource: resources.Resource{
+					Metadata: resources.Metadata{
+						GUID: "service-instance-guid-a",
+					},
+				},
+				Entity: resources.ServiceInstanceEntity{
+					Name: "database-a",
+				},
+			},
+			{
+				Resource: resources.Resource{
+					Metadata: resources.Metadata{
+						GUID: "service-instance-guid-b",
+					},
+				},
+				Entity: resources.ServiceInstanceEntity{
+					Name: "database-b",
+				},
+			},
+			{
+				Resource: resources.Resource{
+					Metadata: resources.Metadata{
+						GUID: "service-instance-guid-c",
+					},
+				},
+				Entity: resources.ServiceInstanceEntity{
+					Name: "unbound-database-c",
+				},
+			},
+			{
+				Resource: resources.Resource{
+					Metadata: resources.Metadata{
+						GUID: "service-instance-guid-d",
+					},
+				},
+				Entity: resources.ServiceInstanceEntity{
+					Name: "redis-d",
+				},
+			},
+
+		},
+	}
+}

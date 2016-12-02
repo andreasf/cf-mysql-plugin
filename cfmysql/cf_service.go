@@ -37,6 +37,7 @@ type CfServiceImpl struct {
 
 func NewCfService() *CfServiceImpl {
 	return &CfServiceImpl{
+		ApiClient: NewApiClient(),
 		SshRunner: new(CfSshRunner),
 		PortWaiter: NewPortWaiter(),
 		HttpClient: new(HttpWrapper),
@@ -55,7 +56,7 @@ func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) 
 		bindingChan <- BindingResult{Bindings: bindings, Err: err}
 	}()
 
-	instances, err := self.GetServiceInstances(cliConnection)
+	instances, err := self.ApiClient.GetServiceInstances(cliConnection)
 	if err != nil {
 		return nil, err
 	}
@@ -118,26 +119,6 @@ func deserializeBindings(bindingResponse []byte) (*pluginResources.PaginatedServ
 			}
 			credentials.Port = portString
 		}
-	}
-
-	return paginatedResources, nil
-}
-
-func (self *CfServiceImpl) GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error) {
-	instanceResponse, err := self.getFromCfApi("/v2/service_instances", cliConnection)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
-	}
-
-	return deserializeInstances(instanceResponse)
-}
-
-func deserializeInstances(jsonResponse []byte) (*resources.PaginatedServiceInstanceResources, error) {
-	paginatedResources := new(resources.PaginatedServiceInstanceResources)
-	err := json.Unmarshal(jsonResponse, paginatedResources)
-
-	if err != nil {
-		return nil, fmt.Errorf("Unable to deserialize service instances: %s", err)
 	}
 
 	return paginatedResources, nil

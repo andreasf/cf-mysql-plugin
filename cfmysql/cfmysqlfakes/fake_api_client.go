@@ -4,12 +4,22 @@ package cfmysqlfakes
 import (
 	"sync"
 
+	"code.cloudfoundry.org/cli/cf/api/resources"
 	"code.cloudfoundry.org/cli/plugin"
 	. "code.cloudfoundry.org/cli/plugin/models"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 )
 
 type FakeApiClient struct {
+	GetServiceInstancesStub        func(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error)
+	getServiceInstancesMutex       sync.RWMutex
+	getServiceInstancesArgsForCall []struct {
+		cliConnection plugin.CliConnection
+	}
+	getServiceInstancesReturns struct {
+		result1 *resources.PaginatedServiceInstanceResources
+		result2 error
+	}
 	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]GetAppsModel, error)
 	getStartedAppsMutex       sync.RWMutex
 	getStartedAppsArgsForCall []struct {
@@ -21,6 +31,40 @@ type FakeApiClient struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeApiClient) GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error) {
+	fake.getServiceInstancesMutex.Lock()
+	fake.getServiceInstancesArgsForCall = append(fake.getServiceInstancesArgsForCall, struct {
+		cliConnection plugin.CliConnection
+	}{cliConnection})
+	fake.recordInvocation("GetServiceInstances", []interface{}{cliConnection})
+	fake.getServiceInstancesMutex.Unlock()
+	if fake.GetServiceInstancesStub != nil {
+		return fake.GetServiceInstancesStub(cliConnection)
+	} else {
+		return fake.getServiceInstancesReturns.result1, fake.getServiceInstancesReturns.result2
+	}
+}
+
+func (fake *FakeApiClient) GetServiceInstancesCallCount() int {
+	fake.getServiceInstancesMutex.RLock()
+	defer fake.getServiceInstancesMutex.RUnlock()
+	return len(fake.getServiceInstancesArgsForCall)
+}
+
+func (fake *FakeApiClient) GetServiceInstancesArgsForCall(i int) plugin.CliConnection {
+	fake.getServiceInstancesMutex.RLock()
+	defer fake.getServiceInstancesMutex.RUnlock()
+	return fake.getServiceInstancesArgsForCall[i].cliConnection
+}
+
+func (fake *FakeApiClient) GetServiceInstancesReturns(result1 *resources.PaginatedServiceInstanceResources, result2 error) {
+	fake.GetServiceInstancesStub = nil
+	fake.getServiceInstancesReturns = struct {
+		result1 *resources.PaginatedServiceInstanceResources
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
@@ -60,6 +104,8 @@ func (fake *FakeApiClient) GetStartedAppsReturns(result1 []GetAppsModel, result2
 func (fake *FakeApiClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.getServiceInstancesMutex.RLock()
+	defer fake.getServiceInstancesMutex.RUnlock()
 	fake.getStartedAppsMutex.RLock()
 	defer fake.getStartedAppsMutex.RUnlock()
 	return fake.invocations
