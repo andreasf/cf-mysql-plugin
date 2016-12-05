@@ -11,7 +11,7 @@ import (
 	"code.cloudfoundry.org/cli/cf/errors"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"code.cloudfoundry.org/cli/plugin"
-	"code.cloudfoundry.org/cli/cf/api/resources"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 )
 
 var _ = Describe("CfSdkClient", func() {
@@ -177,51 +177,23 @@ var _ = Describe("CfSdkClient", func() {
 	})
 })
 
-func mockInstances() *resources.PaginatedServiceInstanceResources {
-	return &resources.PaginatedServiceInstanceResources{
-		TotalResults: 3,
-		Resources: []resources.ServiceInstanceResource{
-			{
-				Resource: resources.Resource{
-					Metadata: resources.Metadata{
-						GUID: "service-instance-guid-a",
-					},
-				},
-				Entity: resources.ServiceInstanceEntity{
-					Name: "database-a",
-				},
-			},
-			{
-				Resource: resources.Resource{
-					Metadata: resources.Metadata{
-						GUID: "service-instance-guid-b",
-					},
-				},
-				Entity: resources.ServiceInstanceEntity{
-					Name: "database-b",
-				},
-			},
-			{
-				Resource: resources.Resource{
-					Metadata: resources.Metadata{
-						GUID: "service-instance-guid-c",
-					},
-				},
-				Entity: resources.ServiceInstanceEntity{
-					Name: "unbound-database-c",
-				},
-			},
-			{
-				Resource: resources.Resource{
-					Metadata: resources.Metadata{
-						GUID: "service-instance-guid-d",
-					},
-				},
-				Entity: resources.ServiceInstanceEntity{
-					Name: "redis-d",
-				},
-			},
-
+func mockInstances() []models.ServiceInstance {
+	return []models.ServiceInstance{
+		{
+			Name: "database-a",
+			Guid: "service-instance-guid-a",
+		},
+		{
+			Name: "database-b",
+			Guid: "service-instance-guid-b",
+		},
+		{
+			Name: "unbound-database-c",
+			Guid: "service-instance-guid-c",
+		},
+		{
+			Name: "redis-d",
+			Guid: "service-instance-guid-d",
 		},
 	}
 }

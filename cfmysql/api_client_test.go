@@ -78,10 +78,10 @@ var _ = Describe("ApiClient", func() {
 			cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
 			cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
 
-			paginatedResources, err := apiClient.GetServiceInstances(cliConnection)
+			instances, err := apiClient.GetServiceInstances(cliConnection)
 
 			Expect(err).To(BeNil())
-			Expect(paginatedResources.Resources).To(HaveLen(4))
+			Expect(instances).To(HaveLen(4))
 
 			Expect(cliConnection.AccessTokenCallCount()).To(Equal(1))
 			Expect(cliConnection.ApiEndpointCallCount()).To(Equal(1))

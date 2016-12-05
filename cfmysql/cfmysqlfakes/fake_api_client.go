@@ -4,36 +4,36 @@ package cfmysqlfakes
 import (
 	"sync"
 
-	"code.cloudfoundry.org/cli/cf/api/resources"
 	"code.cloudfoundry.org/cli/plugin"
-	. "code.cloudfoundry.org/cli/plugin/models"
+	modelsplugin "code.cloudfoundry.org/cli/plugin/models"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 )
 
 type FakeApiClient struct {
-	GetServiceInstancesStub        func(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error)
+	GetServiceInstancesStub        func(cliConnection plugin.CliConnection) ([]models.ServiceInstance, error)
 	getServiceInstancesMutex       sync.RWMutex
 	getServiceInstancesArgsForCall []struct {
 		cliConnection plugin.CliConnection
 	}
 	getServiceInstancesReturns struct {
-		result1 *resources.PaginatedServiceInstanceResources
+		result1 []models.ServiceInstance
 		result2 error
 	}
-	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]GetAppsModel, error)
+	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]modelsplugin.GetAppsModel, error)
 	getStartedAppsMutex       sync.RWMutex
 	getStartedAppsArgsForCall []struct {
 		cliConnection plugin.CliConnection
 	}
 	getStartedAppsReturns struct {
-		result1 []GetAppsModel
+		result1 []modelsplugin.GetAppsModel
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeApiClient) GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error) {
+func (fake *FakeApiClient) GetServiceInstances(cliConnection plugin.CliConnection) ([]models.ServiceInstance, error) {
 	fake.getServiceInstancesMutex.Lock()
 	fake.getServiceInstancesArgsForCall = append(fake.getServiceInstancesArgsForCall, struct {
 		cliConnection plugin.CliConnection
@@ -59,15 +59,15 @@ func (fake *FakeApiClient) GetServiceInstancesArgsForCall(i int) plugin.CliConne
 	return fake.getServiceInstancesArgsForCall[i].cliConnection
 }
 
-func (fake *FakeApiClient) GetServiceInstancesReturns(result1 *resources.PaginatedServiceInstanceResources, result2 error) {
+func (fake *FakeApiClient) GetServiceInstancesReturns(result1 []models.ServiceInstance, result2 error) {
 	fake.GetServiceInstancesStub = nil
 	fake.getServiceInstancesReturns = struct {
-		result1 *resources.PaginatedServiceInstanceResources
+		result1 []models.ServiceInstance
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
+func (fake *FakeApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]modelsplugin.GetAppsModel, error) {
 	fake.getStartedAppsMutex.Lock()
 	fake.getStartedAppsArgsForCall = append(fake.getStartedAppsArgsForCall, struct {
 		cliConnection plugin.CliConnection
@@ -93,10 +93,10 @@ func (fake *FakeApiClient) GetStartedAppsArgsForCall(i int) plugin.CliConnection
 	return fake.getStartedAppsArgsForCall[i].cliConnection
 }
 
-func (fake *FakeApiClient) GetStartedAppsReturns(result1 []GetAppsModel, result2 error) {
+func (fake *FakeApiClient) GetStartedAppsReturns(result1 []modelsplugin.GetAppsModel, result2 error) {
 	fake.GetStartedAppsStub = nil
 	fake.getStartedAppsReturns = struct {
-		result1 []GetAppsModel
+		result1 []modelsplugin.GetAppsModel
 		result2 error
 	}{result1, result2}
 }

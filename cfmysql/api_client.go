@@ -2,23 +2,24 @@ package cfmysql
 
 import (
 	"code.cloudfoundry.org/cli/plugin"
-	. "code.cloudfoundry.org/cli/plugin/models"
+	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	"fmt"
-	"code.cloudfoundry.org/cli/cf/api/resources"
 	"encoding/json"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
 )
 
 //go:generate counterfeiter . ApiClient
 type ApiClient interface {
-	GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error)
-	GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error)
+	GetServiceInstances(cliConnection plugin.CliConnection) ([]models.ServiceInstance, error)
+	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
 }
 
 type ApiClientImpl struct {
 	HttpClient Http
 }
 
-func (self *ApiClientImpl) GetServiceInstances(cliConnection plugin.CliConnection) (*resources.PaginatedServiceInstanceResources, error) {
+func (self *ApiClientImpl) GetServiceInstances(cliConnection plugin.CliConnection) ([]models.ServiceInstance, error) {
 	instanceResponse, err := self.getFromCfApi("/v2/service_instances", cliConnection)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
@@ -41,7 +42,7 @@ func (self *ApiClientImpl) getFromCfApi(path string, cliConnection plugin.CliCon
 	return self.HttpClient.Get(endpoint + path, accessToken)
 }
 
-func deserializeInstances(jsonResponse []byte) (*resources.PaginatedServiceInstanceResources, error) {
+func deserializeInstances(jsonResponse []byte) ([]models.ServiceInstance, error) {
 	paginatedResources := new(resources.PaginatedServiceInstanceResources)
 	err := json.Unmarshal(jsonResponse, paginatedResources)
 
@@ -49,16 +50,16 @@ func deserializeInstances(jsonResponse []byte) (*resources.PaginatedServiceInsta
 		return nil, fmt.Errorf("Unable to deserialize service instances: %s", err)
 	}
 
-	return paginatedResources, nil
+	return paginatedResources.ToModel(), nil
 }
 
-func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
+func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
 	apps, err := cliConnection.GetApps()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to retrieve apps: %s", err)
 	}
 
-	startedApps := make([]GetAppsModel, 0, len(apps))
+	startedApps := make([]sdkModels.GetAppsModel, 0, len(apps))
 
 	for _, app := range (apps) {
 		if app.State == "started" {

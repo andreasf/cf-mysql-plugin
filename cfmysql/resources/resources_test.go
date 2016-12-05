@@ -6,15 +6,16 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/test_resources"
-	"code.cloudfoundry.org/cli/cf/api/resources"
 	"encoding/json"
+	"code.cloudfoundry.org/cli/cf/api/resources"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 )
 
 var _ = Describe("Resources", func() {
-	Context("Deserializing JSON", func() {
-		Context("Service instances", func() {
+	Describe("Service instances", func() {
+		Context("Deserializing JSON", func() {
 			It("can get service instance names and guids", func() {
-				paginatedResources := new(resources.PaginatedServiceInstanceResources)
+				paginatedResources := new(PaginatedServiceInstanceResources)
 				err := json.Unmarshal(test_resources.LoadResource("../test_resources/service_instances.json"), paginatedResources)
 
 				Expect(err).To(BeNil())
@@ -22,14 +23,62 @@ var _ = Describe("Resources", func() {
 
 				Expect(paginatedResources.Resources[0].Entity.Name).To(Equal("database-a"))
 				Expect(paginatedResources.Resources[0].Metadata.GUID).To(Equal("service-instance-guid-a"))
+				Expect(paginatedResources.Resources[0].Entity.SpaceUrl).To(Equal("/v2/spaces/space-guid"))
 
 				Expect(paginatedResources.Resources[1].Entity.Name).To(Equal("database-b"))
 				Expect(paginatedResources.Resources[1].Metadata.GUID).To(Equal("service-instance-guid-b"))
+				Expect(paginatedResources.Resources[1].Entity.SpaceUrl).To(Equal("/v2/spaces/space-guid"))
 			})
 		})
 
+		Context("Converting to models", func() {
+			It("Converts very nicely", func() {
+				resourceInstances := &PaginatedServiceInstanceResources{
+					Resources: []ServiceInstanceResource{
+						{
+							Resource: resources.Resource{
+								Metadata: resources.Metadata{
+									GUID: "fine-guid",
+								},
+							},
+							Entity: ServiceInstanceEntity{
+								Name: "outstanding-service-name",
+								SpaceUrl: "/v2/spaces/outer-space-guid",
+							},
+						},
+						{
+							Resource: resources.Resource{
+								Metadata: resources.Metadata{
+									GUID: "better-guid",
+								},
+							},
+							Entity: ServiceInstanceEntity{
+								Name: "best-service-name",
+								SpaceUrl: "/v2/spaces/inner-space-guid",
+							},
+						},
+					},
+				}
 
-		Context("Service bindings", func() {
+				instanceModels := resourceInstances.ToModel()
+
+				Expect(instanceModels).To(HaveLen(2))
+				Expect(instanceModels[0]).To(Equal(models.ServiceInstance{
+					Name: "outstanding-service-name",
+					Guid: "fine-guid",
+					SpaceGuid: "outer-space-guid",
+				}))
+				Expect(instanceModels[1]).To(Equal(models.ServiceInstance{
+					Name: "best-service-name",
+					Guid: "better-guid",
+					SpaceGuid: "inner-space-guid",
+				}))
+			})
+		})
+	})
+
+	Describe("Service bindings", func() {
+		Context("Deserializing JSON", func() {
 			It("can get credentials", func() {
 				paginatedResources := new(PaginatedServiceBindingResources)
 				err := json.Unmarshal(test_resources.LoadResource("../test_resources/service_bindings.json"), paginatedResources)

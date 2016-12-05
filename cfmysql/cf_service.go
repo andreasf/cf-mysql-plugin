@@ -4,17 +4,17 @@ import (
 	"code.cloudfoundry.org/cli/plugin"
 	"fmt"
 	"strings"
-	"code.cloudfoundry.org/cli/cf/api/resources"
 	"encoding/json"
 	pluginResources "github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
-	. "code.cloudfoundry.org/cli/plugin/models"
+	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	"strconv"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 )
 
 //go:generate counterfeiter . CfService
 type CfService interface {
 	GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error)
-	GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error)
+	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
 	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int)
 }
 
@@ -124,7 +124,7 @@ func deserializeBindings(bindingResponse []byte) (*pluginResources.PaginatedServ
 	return paginatedResources, nil
 }
 
-func (self *CfServiceImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
+func (self *CfServiceImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
 	return self.ApiClient.GetStartedApps(cliConnection)
 }
 
@@ -134,7 +134,7 @@ func (self *CfServiceImpl) OpenSshTunnel(cliConnection plugin.CliConnection, toS
 	self.PortWaiter.WaitUntilOpen(localPort)
 }
 
-func getAvailableServices(bindings *pluginResources.PaginatedServiceBindingResources, instances *resources.PaginatedServiceInstanceResources) []MysqlService {
+func getAvailableServices(bindings *pluginResources.PaginatedServiceBindingResources, instances []models.ServiceInstance) []MysqlService {
 	boundServiceCredentials := make(map[string]pluginResources.MysqlCredentials)
 
 	for _, bindingResource := range (bindings.Resources) {
@@ -146,9 +146,9 @@ func getAvailableServices(bindings *pluginResources.PaginatedServiceBindingResou
 
 	services := make([]MysqlService, 0, len(bindings.Resources))
 
-	for _, instanceResource := range (instances.Resources) {
-		guid := instanceResource.Metadata.GUID
-		name := instanceResource.Entity.Name
+	for _, instance := range instances {
+		guid := instance.Guid
+		name := instance.Name
 
 		credentials, serviceBound := boundServiceCredentials[guid]
 		if serviceBound && strings.HasPrefix(credentials.Uri, "mysql://") {
