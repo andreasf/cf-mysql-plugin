@@ -26,6 +26,12 @@ var _ = Describe("CfSdkClient", func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
 		cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
 		cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
+		cliConnection.GetCurrentSpaceReturns(plugin_models.Space{
+			SpaceFields: plugin_models.SpaceFields{
+				Guid: "space-guid-a",
+				Name: "space is the place",
+			},
+		}, nil)
 
 		apiClient = new(cfmysqlfakes.FakeApiClient)
 		sshRunner = new(cfmysqlfakes.FakeSshRunner)
@@ -98,6 +104,17 @@ var _ = Describe("CfSdkClient", func() {
 				Username: "username-b",
 				Password: "password-b",
 			}))
+		})
+
+		Context("When the current space can't be determined", func() {
+			It("Returns an error", func() {
+				cliConnection.GetCurrentSpaceReturns(plugin_models.Space{}, errors.New("PC LOAD LETTER"))
+
+				services, err := service.GetMysqlServices(cliConnection)
+
+				Expect(services).To(BeNil())
+				Expect(err).To(Equal(errors.New("Error retrieving current space: PC LOAD LETTER")))
+			})
 		})
 	})
 
@@ -182,18 +199,27 @@ func mockInstances() []models.ServiceInstance {
 		{
 			Name: "database-a",
 			Guid: "service-instance-guid-a",
+			SpaceGuid: "space-guid-a",
 		},
 		{
 			Name: "database-b",
 			Guid: "service-instance-guid-b",
+			SpaceGuid: "space-guid-a",
 		},
 		{
 			Name: "unbound-database-c",
 			Guid: "service-instance-guid-c",
+			SpaceGuid: "space-guid-a",
 		},
 		{
 			Name: "redis-d",
 			Guid: "service-instance-guid-d",
+			SpaceGuid: "space-guid-a",
+		},
+		{
+			Name: "database-e",
+			Guid: "service-instance-guid-e",
+			SpaceGuid: "space-guid-b",
 		},
 	}
 }

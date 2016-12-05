@@ -66,7 +66,12 @@ func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) 
 		return nil, bindingResult.Err
 	}
 
-	return getAvailableServices(bindingResult.Bindings, instances), nil
+	space, err := cliConnection.GetCurrentSpace()
+	if err != nil {
+		return nil, fmt.Errorf("Error retrieving current space: %s", err)
+	}
+
+	return getAvailableServices(bindingResult.Bindings, instances, space.Guid), nil
 }
 
 func (self *CfServiceImpl) GetServiceBindings(cliConnection plugin.CliConnection) (*pluginResources.PaginatedServiceBindingResources, error) {
@@ -134,7 +139,7 @@ func (self *CfServiceImpl) OpenSshTunnel(cliConnection plugin.CliConnection, toS
 	self.PortWaiter.WaitUntilOpen(localPort)
 }
 
-func getAvailableServices(bindings *pluginResources.PaginatedServiceBindingResources, instances []models.ServiceInstance) []MysqlService {
+func getAvailableServices(bindings *pluginResources.PaginatedServiceBindingResources, instances []models.ServiceInstance, spaceGuid string) []MysqlService {
 	boundServiceCredentials := make(map[string]pluginResources.MysqlCredentials)
 
 	for _, bindingResource := range (bindings.Resources) {
@@ -151,7 +156,7 @@ func getAvailableServices(bindings *pluginResources.PaginatedServiceBindingResou
 		name := instance.Name
 
 		credentials, serviceBound := boundServiceCredentials[guid]
-		if serviceBound && strings.HasPrefix(credentials.Uri, "mysql://") {
+		if instance.SpaceGuid == spaceGuid && serviceBound && strings.HasPrefix(credentials.Uri, "mysql://") {
 			services = append(services, makeServiceModel(name, credentials))
 		}
 	}
