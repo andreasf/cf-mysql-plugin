@@ -6,3 +6,12 @@ type ServiceInstance struct {
 	SpaceGuid string
 }
 
+type ServiceBinding struct {
+	ServiceInstanceGuid string
+	Uri      string
+	DbName   string
+	Hostname string
+	Port	 string
+	Username string
+	Password string
+}

@@ -5,8 +5,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/test_resources"
-	"fmt"
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/cf/errors"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
@@ -38,14 +36,6 @@ var _ = Describe("CfSdkClient", func() {
 		portWaiter = new(cfmysqlfakes.FakePortWaiter)
 
 		mockHttp = new(cfmysqlfakes.FakeHttp)
-		mockHttp.GetStub = func(url string, accessToken string) ([]byte, error) {
-			switch url {
-			case "https://cf.api.url/v2/service_bindings":
-				return test_resources.LoadResource("test_resources/service_bindings.json"), nil
-			default:
-				return nil, fmt.Errorf("URL not handled in mock: %s", url)
-			}
-		}
 
 		service = &CfServiceImpl{
 			ApiClient: apiClient,
@@ -56,31 +46,14 @@ var _ = Describe("CfSdkClient", func() {
 	})
 
 	Context("GetMysqlServices: retrieving available MySQL services", func() {
-		It("Gets a list of bindings", func() {
-			paginatedResources, err := service.GetServiceBindings(cliConnection)
-
-			Expect(err).To(BeNil())
-			Expect(paginatedResources.Resources).To(HaveLen(5))
-			Expect(paginatedResources.Resources[0].Entity.Credentials.Port).To(Equal("3306"))
-			Expect(paginatedResources.Resources[3].Entity.Credentials.Port).To(Equal("54321"))
-
-			Expect(cliConnection.AccessTokenCallCount()).To(Equal(1))
-			Expect(cliConnection.ApiEndpointCallCount()).To(Equal(1))
-
-			Expect(mockHttp.GetCallCount()).To(Equal(1))
-			url, access_token := mockHttp.GetArgsForCall(0)
-			Expect(url).To(Equal("https://cf.api.url/v2/service_bindings"))
-			Expect(access_token).To(Equal("bearer my-secret-token"))
-
-		})
-
 		It("Gets a list of service instances and bindings", func() {
 			apiClient.GetServiceInstancesReturns(mockInstances(), nil)
+			apiClient.GetServiceBindingsReturns(mockBindings(), nil)
 
 			services, err := service.GetMysqlServices(cliConnection)
 
-			Expect(apiClient.GetServiceInstancesCallCount()).To(Equal(1))
-			Expect(apiClient.GetServiceInstancesArgsForCall(0)).To(Equal(cliConnection))
+			Expect(apiClient.GetServiceBindingsCallCount()).To(Equal(1))
+			Expect(apiClient.GetServiceBindingsArgsForCall(0)).To(Equal(cliConnection))
 
 			Expect(err).To(BeNil())
 			Expect(services).To(HaveLen(2))
@@ -220,6 +193,56 @@ func mockInstances() []models.ServiceInstance {
 			Name: "database-e",
 			Guid: "service-instance-guid-e",
 			SpaceGuid: "space-guid-b",
+		},
+	}
+}
+
+func mockBindings() []models.ServiceBinding {
+	return []models.ServiceBinding{
+		{
+			ServiceInstanceGuid: "service-instance-guid-a",
+			Uri: "mysql://username-a:password-a@database-a.host:3306/dbname-a?reconnect=true",
+			DbName: "dbname-a",
+			Hostname: "database-a.host",
+			Port: "3306",
+			Username: "username-a",
+			Password: "password-a",
+		},
+		{
+			ServiceInstanceGuid: "service-instance-guid-b",
+			Uri: "mysql://username-b:password-b@database-b.host:3307/dbname-b?reconnect=true",
+			DbName: "dbname-b",
+			Hostname: "database-b.host",
+			Port: "3307",
+			Username: "username-b",
+			Password: "password-b",
+		},
+		{
+			ServiceInstanceGuid: "service-instance-guid-d",
+			Uri: "",
+			DbName: "",
+			Hostname: "redis-host.name",
+			Port: "4321",
+			Username: "",
+			Password: "redis-password",
+		},
+		{
+			ServiceInstanceGuid: "service-instance-guid-e",
+			Uri: "mysql://username-e:password-e@database-e.host:54321/dbname-e?reconnect=true",
+			DbName: "dbname-e",
+			Hostname: "database-e.host",
+			Port: "54321",
+			Username: "username-e",
+			Password: "password-e",
+		},
+		{
+			ServiceInstanceGuid: "service-instance-guid-f",
+			Uri: "",
+			DbName: "",
+			Hostname: "",
+			Port: "",
+			Username: "",
+			Password: "",
 		},
 	}
 }

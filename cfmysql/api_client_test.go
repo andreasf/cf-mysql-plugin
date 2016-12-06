@@ -23,6 +23,8 @@ var _ = Describe("ApiClient", func() {
 		mockHttp = new(cfmysqlfakes.FakeHttp)
 		mockHttp.GetStub = func(url string, accessToken string) ([]byte, error) {
 			switch url {
+			case "https://cf.api.url/v2/service_bindings":
+				return test_resources.LoadResource("test_resources/service_bindings.json"), nil
 			case "https://cf.api.url/v2/service_instances":
 				return test_resources.LoadResource("test_resources/service_instances.json"), nil
 			default:
@@ -90,6 +92,30 @@ var _ = Describe("ApiClient", func() {
 			url, access_token := mockHttp.GetArgsForCall(0)
 			Expect(url).To(Equal("https://cf.api.url/v2/service_instances"))
 			Expect(access_token).To(Equal("bearer my-secret-token"))
+		})
+	})
+
+	Describe("GetServiceBindings", func() {
+		Context("When the API returns a list of bindings", func() {
+			It("Returns the list of bindings", func() {
+				cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
+				cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
+
+				bindings, err := apiClient.GetServiceBindings(cliConnection)
+
+				Expect(err).To(BeNil())
+				Expect(bindings).To(HaveLen(5))
+				Expect(bindings[0].Port).To(Equal("3306"))
+				Expect(bindings[3].Port).To(Equal("54321"))
+
+				Expect(cliConnection.AccessTokenCallCount()).To(Equal(1))
+				Expect(cliConnection.ApiEndpointCallCount()).To(Equal(1))
+
+				Expect(mockHttp.GetCallCount()).To(Equal(1))
+				url, access_token := mockHttp.GetArgsForCall(0)
+				Expect(url).To(Equal("https://cf.api.url/v2/service_bindings"))
+				Expect(access_token).To(Equal("bearer my-secret-token"))
+			})
 		})
 	})
 })

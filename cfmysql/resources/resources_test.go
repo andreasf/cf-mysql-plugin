@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"code.cloudfoundry.org/cli/cf/api/resources"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	"errors"
 )
 
 var _ = Describe("Resources", func() {
@@ -104,6 +105,91 @@ var _ = Describe("Resources", func() {
 				err = json.Unmarshal(paginatedResources.Resources[3].Entity.Credentials.RawPort, &portInt)
 				Expect(err).To(BeNil())
 				Expect(portInt).To(Equal(54321))
+			})
+		})
+
+		Context("Converting to models", func() {
+			It("Converts very nicely if the port is string or int", func() {
+				resourceBindings := &PaginatedServiceBindingResources{
+					Resources: []ServiceBindingResource{
+						{
+							Entity: ServiceBindingEntity{
+								ServiceInstanceGUID: "service-instance-guid-a",
+								Credentials: MysqlCredentials{
+									Uri: "uri-a",
+									DbName: "db-name-a",
+									Hostname: "hostname-a",
+									RawPort: []byte("\"1234\""),
+									Username: "username-a",
+									Password: "password-a",
+								},
+							},
+						},
+						{
+							Entity: ServiceBindingEntity{
+								ServiceInstanceGUID: "service-instance-guid-b",
+								Credentials: MysqlCredentials{
+									Uri: "uri-b",
+									DbName: "db-name-b",
+									Hostname: "hostname-b",
+									RawPort: []byte("2345"),
+									Username: "username-b",
+									Password: "password-b",
+								},
+							},
+						},
+					},
+				}
+
+				bindings, err := resourceBindings.ToModel()
+
+				Expect(err).To(BeNil())
+
+				Expect(bindings).To(HaveLen(2))
+				Expect(bindings[0]).To(Equal(models.ServiceBinding{
+					ServiceInstanceGuid: "service-instance-guid-a",
+					Uri: "uri-a",
+					DbName: "db-name-a",
+					Hostname: "hostname-a",
+					Port: "1234",
+					Username: "username-a",
+					Password: "password-a",
+				}))
+				Expect(bindings[1]).To(Equal(models.ServiceBinding{
+					ServiceInstanceGuid: "service-instance-guid-b",
+					Uri: "uri-b",
+					DbName: "db-name-b",
+					Hostname: "hostname-b",
+					Port: "2345",
+					Username: "username-b",
+					Password: "password-b",
+				}))
+			})
+
+			It("Returns an error if the port is not string or int", func() {
+				resourceBindings := &PaginatedServiceBindingResources{
+					Resources: []ServiceBindingResource{
+						{
+							Entity: ServiceBindingEntity{
+								ServiceInstanceGUID: "service-instance-guid-b",
+								Credentials: MysqlCredentials{
+									Uri: "uri-b",
+									DbName: "db-name-b",
+									Hostname: "hostname-b",
+									RawPort: []byte("false"),
+									Username: "username-b",
+									Password: "password-b",
+								},
+							},
+						},
+					},
+				}
+
+				bindings, err := resourceBindings.ToModel()
+
+				Expect(err).To(Equal(errors.New("Unable to deserialize port in service binding: 'false'")))
+
+				Expect(bindings).To(BeNil())
 			})
 		})
 	})

@@ -44,7 +44,7 @@
         "service_instance_guid": "service-instance-guid-b",
         "credentials": {
           "jdbcUrl": "jdbc:mysql://database-b.host/dbname-b?user=username-b&password=password-b",
-          "uri": "mysql://username-b:password-b@database-b.host:3306/dbname-b?reconnect=true",
+          "uri": "mysql://username-b:password-b@database-b.host:3307/dbname-b?reconnect=true",
           "name": "dbname-b",
           "hostname": "database-b.host",
           "port": "3307",
@@ -96,7 +96,7 @@
         "service_instance_guid": "service-instance-guid-e",
         "credentials": {
           "jdbcUrl": "jdbc:mysql://database-e.host/dbname-e?user=username-e&password=password-e",
-          "uri": "mysql://username-e:password-e@database-e.host:3306/dbname-e?reconnect=true",
+          "uri": "mysql://username-e:password-e@database-e.host:54321/dbname-e?reconnect=true",
           "name": "dbname-e",
           "hostname": "database-e.host",
           "port": 54321,

@@ -5,35 +5,80 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/cli/plugin"
-	modelsplugin "code.cloudfoundry.org/cli/plugin/models"
+
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	modelscfmysql "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+
+	"code.cloudfoundry.org/cli/plugin/models"
 )
 
 type FakeApiClient struct {
-	GetServiceInstancesStub        func(cliConnection plugin.CliConnection) ([]models.ServiceInstance, error)
+	GetServiceBindingsStub        func(cliConnection plugin.CliConnection) ([]modelscfmysql.ServiceBinding, error)
+	getServiceBindingsMutex       sync.RWMutex
+	getServiceBindingsArgsForCall []struct {
+		cliConnection plugin.CliConnection
+	}
+	getServiceBindingsReturns struct {
+		result1 []modelscfmysql.ServiceBinding
+		result2 error
+	}
+	GetServiceInstancesStub        func(cliConnection plugin.CliConnection) ([]modelscfmysql.ServiceInstance, error)
 	getServiceInstancesMutex       sync.RWMutex
 	getServiceInstancesArgsForCall []struct {
 		cliConnection plugin.CliConnection
 	}
 	getServiceInstancesReturns struct {
-		result1 []models.ServiceInstance
+		result1 []modelscfmysql.ServiceInstance
 		result2 error
 	}
-	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]modelsplugin.GetAppsModel, error)
+	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]plugin_models.GetAppsModel, error)
 	getStartedAppsMutex       sync.RWMutex
 	getStartedAppsArgsForCall []struct {
 		cliConnection plugin.CliConnection
 	}
 	getStartedAppsReturns struct {
-		result1 []modelsplugin.GetAppsModel
+		result1 []plugin_models.GetAppsModel
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeApiClient) GetServiceInstances(cliConnection plugin.CliConnection) ([]models.ServiceInstance, error) {
+func (fake *FakeApiClient) GetServiceBindings(cliConnection plugin.CliConnection) ([]modelscfmysql.ServiceBinding, error) {
+	fake.getServiceBindingsMutex.Lock()
+	fake.getServiceBindingsArgsForCall = append(fake.getServiceBindingsArgsForCall, struct {
+		cliConnection plugin.CliConnection
+	}{cliConnection})
+	fake.recordInvocation("GetServiceBindings", []interface{}{cliConnection})
+	fake.getServiceBindingsMutex.Unlock()
+	if fake.GetServiceBindingsStub != nil {
+		return fake.GetServiceBindingsStub(cliConnection)
+	} else {
+		return fake.getServiceBindingsReturns.result1, fake.getServiceBindingsReturns.result2
+	}
+}
+
+func (fake *FakeApiClient) GetServiceBindingsCallCount() int {
+	fake.getServiceBindingsMutex.RLock()
+	defer fake.getServiceBindingsMutex.RUnlock()
+	return len(fake.getServiceBindingsArgsForCall)
+}
+
+func (fake *FakeApiClient) GetServiceBindingsArgsForCall(i int) plugin.CliConnection {
+	fake.getServiceBindingsMutex.RLock()
+	defer fake.getServiceBindingsMutex.RUnlock()
+	return fake.getServiceBindingsArgsForCall[i].cliConnection
+}
+
+func (fake *FakeApiClient) GetServiceBindingsReturns(result1 []modelscfmysql.ServiceBinding, result2 error) {
+	fake.GetServiceBindingsStub = nil
+	fake.getServiceBindingsReturns = struct {
+		result1 []modelscfmysql.ServiceBinding
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeApiClient) GetServiceInstances(cliConnection plugin.CliConnection) ([]modelscfmysql.ServiceInstance, error) {
 	fake.getServiceInstancesMutex.Lock()
 	fake.getServiceInstancesArgsForCall = append(fake.getServiceInstancesArgsForCall, struct {
 		cliConnection plugin.CliConnection
@@ -59,15 +104,15 @@ func (fake *FakeApiClient) GetServiceInstancesArgsForCall(i int) plugin.CliConne
 	return fake.getServiceInstancesArgsForCall[i].cliConnection
 }
 
-func (fake *FakeApiClient) GetServiceInstancesReturns(result1 []models.ServiceInstance, result2 error) {
+func (fake *FakeApiClient) GetServiceInstancesReturns(result1 []modelscfmysql.ServiceInstance, result2 error) {
 	fake.GetServiceInstancesStub = nil
 	fake.getServiceInstancesReturns = struct {
-		result1 []models.ServiceInstance
+		result1 []modelscfmysql.ServiceInstance
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]modelsplugin.GetAppsModel, error) {
+func (fake *FakeApiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]plugin_models.GetAppsModel, error) {
 	fake.getStartedAppsMutex.Lock()
 	fake.getStartedAppsArgsForCall = append(fake.getStartedAppsArgsForCall, struct {
 		cliConnection plugin.CliConnection
@@ -93,10 +138,10 @@ func (fake *FakeApiClient) GetStartedAppsArgsForCall(i int) plugin.CliConnection
 	return fake.getStartedAppsArgsForCall[i].cliConnection
 }
 
-func (fake *FakeApiClient) GetStartedAppsReturns(result1 []modelsplugin.GetAppsModel, result2 error) {
+func (fake *FakeApiClient) GetStartedAppsReturns(result1 []plugin_models.GetAppsModel, result2 error) {
 	fake.GetStartedAppsStub = nil
 	fake.getStartedAppsReturns = struct {
-		result1 []modelsplugin.GetAppsModel
+		result1 []plugin_models.GetAppsModel
 		result2 error
 	}{result1, result2}
 }
@@ -104,6 +149,8 @@ func (fake *FakeApiClient) GetStartedAppsReturns(result1 []modelsplugin.GetAppsM
 func (fake *FakeApiClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.getServiceBindingsMutex.RLock()
+	defer fake.getServiceBindingsMutex.RUnlock()
 	fake.getServiceInstancesMutex.RLock()
 	defer fake.getServiceInstancesMutex.RUnlock()
 	fake.getStartedAppsMutex.RLock()

@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"code.cloudfoundry.org/cli/plugin"
-	. "code.cloudfoundry.org/cli/plugin/models"
+	modelsplugin "code.cloudfoundry.org/cli/plugin/models"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 )
 
@@ -19,13 +19,13 @@ type FakeCfService struct {
 		result1 []cfmysql.MysqlService
 		result2 error
 	}
-	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]GetAppsModel, error)
+	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]modelsplugin.GetAppsModel, error)
 	getStartedAppsMutex       sync.RWMutex
 	getStartedAppsArgsForCall []struct {
 		cliConnection plugin.CliConnection
 	}
 	getStartedAppsReturns struct {
-		result1 []GetAppsModel
+		result1 []modelsplugin.GetAppsModel
 		result2 error
 	}
 	OpenSshTunnelStub        func(cliConnection plugin.CliConnection, toService cfmysql.MysqlService, throughApp string, localPort int)
@@ -74,7 +74,7 @@ func (fake *FakeCfService) GetMysqlServicesReturns(result1 []cfmysql.MysqlServic
 	}{result1, result2}
 }
 
-func (fake *FakeCfService) GetStartedApps(cliConnection plugin.CliConnection) ([]GetAppsModel, error) {
+func (fake *FakeCfService) GetStartedApps(cliConnection plugin.CliConnection) ([]modelsplugin.GetAppsModel, error) {
 	fake.getStartedAppsMutex.Lock()
 	fake.getStartedAppsArgsForCall = append(fake.getStartedAppsArgsForCall, struct {
 		cliConnection plugin.CliConnection
@@ -100,10 +100,10 @@ func (fake *FakeCfService) GetStartedAppsArgsForCall(i int) plugin.CliConnection
 	return fake.getStartedAppsArgsForCall[i].cliConnection
 }
 
-func (fake *FakeCfService) GetStartedAppsReturns(result1 []GetAppsModel, result2 error) {
+func (fake *FakeCfService) GetStartedAppsReturns(result1 []modelsplugin.GetAppsModel, result2 error) {
 	fake.GetStartedAppsStub = nil
 	fake.getStartedAppsReturns = struct {
-		result1 []GetAppsModel
+		result1 []modelsplugin.GetAppsModel
 		result2 error
 	}{result1, result2}
 }

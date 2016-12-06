@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 	"strings"
+	"strconv"
+	"fmt"
 )
 
 type PaginatedServiceBindingResources struct {
@@ -69,4 +71,41 @@ func (self *PaginatedServiceInstanceResources) ToModel() []models.ServiceInstanc
 	}
 
 	return convertedModels
+}
+
+func (self *PaginatedServiceBindingResources) ToModel() ([]models.ServiceBinding, error) {
+	convertedModels := []models.ServiceBinding{}
+
+	for _, resource := range self.Resources {
+		var port string
+
+		if len(resource.Entity.Credentials.RawPort) > 0 {
+			var portInt int
+			var portString string
+
+			err := json.Unmarshal(resource.Entity.Credentials.RawPort, &portString)
+			if err != nil {
+				err = json.Unmarshal(resource.Entity.Credentials.RawPort, &portInt)
+				if err != nil {
+					return nil, fmt.Errorf("Unable to deserialize port in service binding: '%s'", string(resource.Entity.Credentials.RawPort))
+				}
+				portString = strconv.Itoa(portInt)
+			}
+			port = portString
+		}
+
+		binding := models.ServiceBinding{
+			ServiceInstanceGuid: resource.Entity.ServiceInstanceGUID,
+			Uri: resource.Entity.Credentials.Uri,
+			DbName: resource.Entity.Credentials.DbName,
+			Hostname: resource.Entity.Credentials.Hostname,
+			Port: port,
+			Username: resource.Entity.Credentials.Username,
+			Password: resource.Entity.Credentials.Password,
+		}
+
+		convertedModels = append(convertedModels, binding)
+	}
+
+	return convertedModels, nil
 }

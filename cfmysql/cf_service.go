@@ -4,11 +4,8 @@ import (
 	"code.cloudfoundry.org/cli/plugin"
 	"fmt"
 	"strings"
-	"encoding/json"
-	pluginResources "github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
-	"strconv"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 )
 
 //go:generate counterfeiter . CfService
@@ -45,14 +42,14 @@ func NewCfService() *CfServiceImpl {
 }
 
 type BindingResult struct {
-	Bindings *pluginResources.PaginatedServiceBindingResources
+	Bindings []pluginModels.ServiceBinding
 	Err      error
 }
 
 func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
 	bindingChan := make(chan BindingResult, 0)
 	go func() {
-		bindings, err := self.GetServiceBindings(cliConnection)
+		bindings, err := self.ApiClient.GetServiceBindings(cliConnection)
 		bindingChan <- BindingResult{Bindings: bindings, Err: err}
 	}()
 
@@ -74,15 +71,6 @@ func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) 
 	return getAvailableServices(bindingResult.Bindings, instances, space.Guid), nil
 }
 
-func (self *CfServiceImpl) GetServiceBindings(cliConnection plugin.CliConnection) (*pluginResources.PaginatedServiceBindingResources, error) {
-	bindingsResp, err := self.getFromCfApi("/v2/service_bindings", cliConnection)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to call service bindings endpoint: %s", err)
-	}
-
-	return deserializeBindings(bindingsResp)
-}
-
 func (self *CfServiceImpl) getFromCfApi(path string, cliConnection plugin.CliConnection) ([]byte, error) {
 	endpoint, err := cliConnection.ApiEndpoint()
 	if err != nil {
@@ -97,38 +85,6 @@ func (self *CfServiceImpl) getFromCfApi(path string, cliConnection plugin.CliCon
 	return self.HttpClient.Get(endpoint + path, accessToken)
 }
 
-func deserializeBindings(bindingResponse []byte) (*pluginResources.PaginatedServiceBindingResources, error) {
-	paginatedResources := new(pluginResources.PaginatedServiceBindingResources)
-	err := json.Unmarshal(bindingResponse, paginatedResources)
-
-	if err != nil {
-		return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
-	}
-
-	// port might be int or string, we don't know upfront.
-	// use index because range would create copies
-	for i := range paginatedResources.Resources {
-		credentials := &paginatedResources.Resources[i].Entity.Credentials
-
-		if len(credentials.RawPort) > 0 {
-			var portInt int
-			var portString string
-
-			err = json.Unmarshal(credentials.RawPort, &portString)
-			if err != nil {
-				err = json.Unmarshal(credentials.RawPort, &portInt)
-				if err != nil {
-					return nil, err
-				}
-				portString = strconv.Itoa(portInt)
-			}
-			credentials.Port = portString
-		}
-	}
-
-	return paginatedResources, nil
-}
-
 func (self *CfServiceImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
 	return self.ApiClient.GetStartedApps(cliConnection)
 }
@@ -139,38 +95,35 @@ func (self *CfServiceImpl) OpenSshTunnel(cliConnection plugin.CliConnection, toS
 	self.PortWaiter.WaitUntilOpen(localPort)
 }
 
-func getAvailableServices(bindings *pluginResources.PaginatedServiceBindingResources, instances []models.ServiceInstance, spaceGuid string) []MysqlService {
-	boundServiceCredentials := make(map[string]pluginResources.MysqlCredentials)
+func getAvailableServices(bindings []pluginModels.ServiceBinding, instances []pluginModels.ServiceInstance, spaceGuid string) []MysqlService {
+	boundServiceCredentials := make(map[string]pluginModels.ServiceBinding)
 
-	for _, bindingResource := range (bindings.Resources) {
-		guid := bindingResource.Entity.ServiceInstanceGUID
-		credentials := bindingResource.Entity.Credentials
-
-		boundServiceCredentials[guid] = credentials
+	for _, binding := range bindings {
+		boundServiceCredentials[binding.ServiceInstanceGuid] = binding
 	}
 
-	services := make([]MysqlService, 0, len(bindings.Resources))
+	services := make([]MysqlService, 0, len(bindings))
 
 	for _, instance := range instances {
 		guid := instance.Guid
 		name := instance.Name
 
-		credentials, serviceBound := boundServiceCredentials[guid]
-		if instance.SpaceGuid == spaceGuid && serviceBound && strings.HasPrefix(credentials.Uri, "mysql://") {
-			services = append(services, makeServiceModel(name, credentials))
+		binding, serviceBound := boundServiceCredentials[guid]
+		if instance.SpaceGuid == spaceGuid && serviceBound && strings.HasPrefix(binding.Uri, "mysql://") {
+			services = append(services, makeServiceModel(name, binding))
 		}
 	}
 
 	return services
 }
 
-func makeServiceModel(name string, credentials pluginResources.MysqlCredentials) MysqlService {
+func makeServiceModel(name string, binding pluginModels.ServiceBinding) MysqlService {
 	return MysqlService{
 		Name: name,
-		Hostname: credentials.Hostname,
-		Port: credentials.Port,
-		DbName: credentials.DbName,
-		Username: credentials.Username,
-		Password: credentials.Password,
+		Hostname: binding.Hostname,
+		Port: binding.Port,
+		DbName: binding.DbName,
+		Username: binding.Username,
+		Password: binding.Password,
 	}
 }

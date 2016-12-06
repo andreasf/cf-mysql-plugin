@@ -2,16 +2,17 @@ package cfmysql
 
 import (
 	"code.cloudfoundry.org/cli/plugin"
-	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	"fmt"
 	"encoding/json"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
+	sdkModels "code.cloudfoundry.org/cli/plugin/models"
+	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 )
 
 //go:generate counterfeiter . ApiClient
 type ApiClient interface {
-	GetServiceInstances(cliConnection plugin.CliConnection) ([]models.ServiceInstance, error)
+	GetServiceBindings(cliConnection plugin.CliConnection) ([]pluginModels.ServiceBinding, error)
+	GetServiceInstances(cliConnection plugin.CliConnection) ([]pluginModels.ServiceInstance, error)
 	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
 }
 
@@ -19,7 +20,7 @@ type ApiClientImpl struct {
 	HttpClient Http
 }
 
-func (self *ApiClientImpl) GetServiceInstances(cliConnection plugin.CliConnection) ([]models.ServiceInstance, error) {
+func (self *ApiClientImpl) GetServiceInstances(cliConnection plugin.CliConnection) ([]pluginModels.ServiceInstance, error) {
 	instanceResponse, err := self.getFromCfApi("/v2/service_instances", cliConnection)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
@@ -42,7 +43,7 @@ func (self *ApiClientImpl) getFromCfApi(path string, cliConnection plugin.CliCon
 	return self.HttpClient.Get(endpoint + path, accessToken)
 }
 
-func deserializeInstances(jsonResponse []byte) ([]models.ServiceInstance, error) {
+func deserializeInstances(jsonResponse []byte) ([]pluginModels.ServiceInstance, error) {
 	paginatedResources := new(resources.PaginatedServiceInstanceResources)
 	err := json.Unmarshal(jsonResponse, paginatedResources)
 
@@ -51,6 +52,26 @@ func deserializeInstances(jsonResponse []byte) ([]models.ServiceInstance, error)
 	}
 
 	return paginatedResources.ToModel(), nil
+}
+
+func (self *ApiClientImpl) GetServiceBindings(cliConnection plugin.CliConnection) ([]pluginModels.ServiceBinding, error) {
+	bindingsResp, err := self.getFromCfApi("/v2/service_bindings", cliConnection)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to call service bindings endpoint: %s", err)
+	}
+
+	return deserializeBindings(bindingsResp)
+}
+
+func deserializeBindings(bindingResponse []byte) ([]pluginModels.ServiceBinding, error) {
+	paginatedResources := new(resources.PaginatedServiceBindingResources)
+	err := json.Unmarshal(bindingResponse, paginatedResources)
+
+	if err != nil {
+		return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
+	}
+
+	return paginatedResources.ToModel()
 }
 
 func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
