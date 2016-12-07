@@ -1,8 +1,8 @@
 {
-  "total_results": 2,
-  "total_pages": 1,
+  "total_results": 6,
+  "total_pages": 2,
   "prev_url": null,
-  "next_url": null,
+  "next_url": "/v2/service_bindings?page=2",
   "resources": [
     {
       "metadata": {

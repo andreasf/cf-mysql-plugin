@@ -1,0 +1,36 @@
+{
+  "total_results": 6,
+  "total_pages": 2,
+  "prev_url": null,
+  "next_url": null,
+  "resources": [
+    {
+      "metadata": {
+        "guid": "guid-service-binding-f",
+        "url": "/v2/service_bindings/guid-service-binding-f",
+        "created_at": "2016-11-15T09:22:15Z",
+        "updated_at": null
+      },
+      "entity": {
+        "app_guid": "app-guid-f",
+        "service_instance_guid": "service-instance-guid-f",
+        "credentials": {
+          "jdbcUrl": "jdbc:mysql://database-f.host/dbname-f?user=username-f&password=password-f",
+          "uri": "mysql://username-f:password-f@database-f.host:3306/dbname-f?reconnect=true",
+          "name": "dbname-f",
+          "hostname": "database-f.host",
+          "port": "3306",
+          "username": "username-f",
+          "password": "password-f"
+        },
+        "binding_options": {},
+        "gateway_data": null,
+        "gateway_name": "",
+        "syslog_drain_url": null,
+        "volume_mounts": [],
+        "app_url": "/v2/apps/app-guid-f",
+        "service_instance_url": "/v2/service_instances/service-instance-guid-f"
+      }
+    }
+  ]
+}

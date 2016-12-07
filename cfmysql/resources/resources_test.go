@@ -21,6 +21,7 @@ var _ = Describe("Resources", func() {
 
 				Expect(err).To(BeNil())
 				Expect(paginatedResources.Resources).To(HaveLen(4))
+				Expect(paginatedResources.NextUrl).To(Equal("/v2/service_instances?page=2"))
 
 				Expect(paginatedResources.Resources[0].Entity.Name).To(Equal("database-a"))
 				Expect(paginatedResources.Resources[0].Metadata.GUID).To(Equal("service-instance-guid-a"))
@@ -86,6 +87,7 @@ var _ = Describe("Resources", func() {
 
 				Expect(err).To(BeNil())
 				Expect(paginatedResources.Resources).To(HaveLen(5))
+				Expect(paginatedResources.NextUrl).To(Equal("/v2/service_bindings?page=2"))
 
 				Expect(paginatedResources.Resources[0].Entity.ServiceInstanceGUID).To(Equal("service-instance-guid-a"))
 				Expect(paginatedResources.Resources[0].Entity.Credentials.Uri).To(Equal("mysql://username-a:password-a@database-a.host:3306/dbname-a?reconnect=true"))

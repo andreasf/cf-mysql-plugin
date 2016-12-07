@@ -21,12 +21,22 @@ type ApiClientImpl struct {
 }
 
 func (self *ApiClientImpl) GetServiceInstances(cliConnection plugin.CliConnection) ([]pluginModels.ServiceInstance, error) {
-	instanceResponse, err := self.getFromCfApi("/v2/service_instances", cliConnection)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
+	var err error
+	var allInstances []pluginModels.ServiceInstance
+	nextUrl := "/v2/service_instances"
+
+	for nextUrl != "" {
+		instanceResponse, err := self.getFromCfApi(nextUrl, cliConnection)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
+		}
+
+		var instances []pluginModels.ServiceInstance
+		nextUrl, instances, err = deserializeInstances(instanceResponse)
+		allInstances = append(allInstances, instances...)
 	}
 
-	return deserializeInstances(instanceResponse)
+	return allInstances, err
 }
 
 func (self *ApiClientImpl) getFromCfApi(path string, cliConnection plugin.CliConnection) ([]byte, error) {
@@ -43,35 +53,49 @@ func (self *ApiClientImpl) getFromCfApi(path string, cliConnection plugin.CliCon
 	return self.HttpClient.Get(endpoint + path, accessToken)
 }
 
-func deserializeInstances(jsonResponse []byte) ([]pluginModels.ServiceInstance, error) {
+func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceInstance, error) {
 	paginatedResources := new(resources.PaginatedServiceInstanceResources)
 	err := json.Unmarshal(jsonResponse, paginatedResources)
 
 	if err != nil {
-		return nil, fmt.Errorf("Unable to deserialize service instances: %s", err)
+		return "", nil, fmt.Errorf("Unable to deserialize service instances: %s", err)
 	}
 
-	return paginatedResources.ToModel(), nil
+	return paginatedResources.NextUrl, paginatedResources.ToModel(), nil
 }
 
 func (self *ApiClientImpl) GetServiceBindings(cliConnection plugin.CliConnection) ([]pluginModels.ServiceBinding, error) {
-	bindingsResp, err := self.getFromCfApi("/v2/service_bindings", cliConnection)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to call service bindings endpoint: %s", err)
+	var allBindings []pluginModels.ServiceBinding
+	nextUrl := "/v2/service_bindings"
+
+	for nextUrl != "" {
+		bindingsResp, err := self.getFromCfApi(nextUrl, cliConnection)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to call service bindings endpoint: %s", err)
+		}
+
+		var bindings []pluginModels.ServiceBinding
+		nextUrl, bindings, err = deserializeBindings(bindingsResp)
+		if err != nil {
+			return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
+		}
+
+		allBindings = append(allBindings, bindings...)
 	}
 
-	return deserializeBindings(bindingsResp)
+	return allBindings, nil
 }
 
-func deserializeBindings(bindingResponse []byte) ([]pluginModels.ServiceBinding, error) {
+func deserializeBindings(bindingResponse []byte) (string, []pluginModels.ServiceBinding, error) {
 	paginatedResources := new(resources.PaginatedServiceBindingResources)
 	err := json.Unmarshal(bindingResponse, paginatedResources)
 
 	if err != nil {
-		return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
+		return "", nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
 	}
 
-	return paginatedResources.ToModel()
+	bindings, err := paginatedResources.ToModel()
+	return paginatedResources.NextUrl, bindings, err
 }
 
 func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {

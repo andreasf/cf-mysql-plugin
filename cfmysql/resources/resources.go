@@ -11,6 +11,7 @@ import (
 
 type PaginatedServiceBindingResources struct {
 	TotalResults int `json:"total_results"`
+	NextUrl      string `json:"next_url"`
 	Resources    []ServiceBindingResource
 }
 
@@ -37,6 +38,7 @@ type MysqlCredentials struct {
 
 type PaginatedServiceInstanceResources struct {
 	TotalResults int `json:"total_results"`
+	NextUrl      string `json:"next_url"`
 	Resources    []ServiceInstanceResource
 }
 
