@@ -17,11 +17,11 @@ deploy:
   api_key:
     secure: ONgfa6uGlzqX9HKizki9Hemw2b68/0d+vlFsq+k6R0KQKhzmD7TnuUNewpAC4ELQtPUQtttknplwLpdPPhY/JcUxJ7/GHxuToeFRzT4Zz8aU6zuCeegM9rRRjPsRtYeB5OHLtiresmPng1OfEhWBoaeOS0aBHb/aQKORQTYr86Q6v7L2u43ikfXMzqFZtjdJnvNbRZqBY/8HfUKhGDhFeW8WXvXvyvFIHmoLKWgcznbW2bBh8GKdv+O/1JPqfAnSZhHrTYV/k+kW6zx8Qyq2VfvN/r97zfjxoDxTHumnyWmZyozXIoHlPxF8aR6OtmSybEV2QvWNwUkhBpKQtvvFn3+egQlfJjdRBizJXYgSwry4307WpY+cBz6rEdN8JajOAXff03uC1mLxsK527afengjuEI/d6lLAKuyz0985yTH/pqetowOwE8U8+BSRwc7/ja8VBAmCv7HS2sI0qsyoaDpunFBeRS8s/QVTsgoKsFtLzHI69vywo/rqUqOJFi3KxPVghdN3vE6f5IauvQeNuDIpV9+7kB9tBoGQjvq52m4woyv/gXWgQl8mS/naY33w4QA3XAQnO0WIoKBq6Et0/wVmpOByJpQGGFS6gvs5QmK+NlV012CAPskwPixuot5np8uJqjXAw1ynGQ1OGh+DvURBD2o+++ij0NLKLWCFacg=
   file:
-    - output/cf-mysql-plugin-linux-amd64.zip
-    - output/cf-mysql-plugin-linux-386.zip
-    - output/cf-mysql-plugin-darwin-amd64.zip
-    - output/cf-mysql-plugin-windows-amd64.zip
-    - output/cf-mysql-plugin-windows-386.zip
+    - output/cf-mysql-plugin-linux-amd64
+    - output/cf-mysql-plugin-linux-386
+    - output/cf-mysql-plugin-darwin-amd64
+    - output/cf-mysql-plugin-amd64.exe
+    - output/cf-mysql-plugin-386.exe
   on:
     tags: true
 
