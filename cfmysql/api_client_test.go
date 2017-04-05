@@ -3,14 +3,15 @@ package cfmysql_test
 import (
 	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"errors"
+	"fmt"
+
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
-	"errors"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/test_resources"
-	"fmt"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("ApiClient", func() {
@@ -21,7 +22,7 @@ var _ = Describe("ApiClient", func() {
 	BeforeEach(func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
 		mockHttp = new(cfmysqlfakes.FakeHttp)
-		mockHttp.GetStub = func(url string, accessToken string) ([]byte, error) {
+		mockHttp.GetStub = func(url string, accessToken string, skipSsl bool) ([]byte, error) {
 			switch url {
 			case "https://cf.api.url/v2/service_bindings":
 				return test_resources.LoadResource("test_resources/service_bindings.json"), nil
@@ -44,15 +45,15 @@ var _ = Describe("ApiClient", func() {
 	Describe("GetStartedApps", func() {
 		Context("When the API returns the list of apps", func() {
 			app1 := plugin_models.GetAppsModel{
-				Name: "app-name-a",
+				Name:  "app-name-a",
 				State: "stopped",
 			}
 			app2 := plugin_models.GetAppsModel{
-				Name: "app-name-b",
+				Name:  "app-name-b",
 				State: "started",
 			}
 			app3 := plugin_models.GetAppsModel{
-				Name: "app-name-c",
+				Name:  "app-name-c",
 				State: "started",
 			}
 

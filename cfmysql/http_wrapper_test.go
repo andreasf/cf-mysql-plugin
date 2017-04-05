@@ -4,10 +4,11 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/onsi/gomega/ghttp"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql"
-	"net/http"
 	"fmt"
+	"net/http"
+
+	"github.com/andreasf/cf-mysql-plugin/cfmysql"
+	"github.com/onsi/gomega/ghttp"
 )
 
 var _ = Describe("HttpWrapper", func() {
@@ -22,7 +23,7 @@ var _ = Describe("HttpWrapper", func() {
 
 			httpWrapper := new(cfmysql.HttpWrapper)
 
-			response, err := httpWrapper.Get(mockServer.URL() + "/the/expected/path", "the-authorization-value")
+			response, err := httpWrapper.Get(mockServer.URL()+"/the/expected/path", "the-authorization-value", true)
 
 			Expect(response).To(Equal([]byte("response body")))
 			Expect(err).To(BeNil())
@@ -35,7 +36,7 @@ var _ = Describe("HttpWrapper", func() {
 		It("Returns an error and no response", func() {
 			httpWrapper := new(cfmysql.HttpWrapper)
 
-			response, err := httpWrapper.Get("http://localhost:52719/no/server/here", "foo")
+			response, err := httpWrapper.Get("http://localhost:52719/no/server/here", "foo", true)
 
 			Expect(err).To(Not(BeNil()))
 			Expect(response).To(BeNil())
@@ -51,7 +52,7 @@ var _ = Describe("HttpWrapper", func() {
 			)
 
 			httpWrapper := new(cfmysql.HttpWrapper)
-			response, err := httpWrapper.Get(mockServer.URL() + "/need/coffee", "foo")
+			response, err := httpWrapper.Get(mockServer.URL()+"/need/coffee", "foo", true)
 
 			Expect(err).To(Equal(fmt.Errorf("HTTP status 418 accessing %s/need/coffee", mockServer.URL())))
 			Expect(response).To(BeNil())
@@ -69,7 +70,7 @@ var _ = Describe("HttpWrapper", func() {
 			)
 
 			httpWrapper := new(cfmysql.HttpWrapper)
-			response, err := httpWrapper.Get(mockServer.URL() + "/this/shall/crash", "foo")
+			response, err := httpWrapper.Get(mockServer.URL()+"/this/shall/crash", "foo", true)
 
 			Expect(err).To(Equal(fmt.Errorf("HTTP status 500 accessing %s/this/shall/crash", mockServer.URL())))
 			Expect(response).To(BeNil())
