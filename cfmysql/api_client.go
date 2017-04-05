@@ -1,12 +1,13 @@
 package cfmysql
 
 import (
-	"code.cloudfoundry.org/cli/plugin"
-	"fmt"
 	"encoding/json"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
+	"fmt"
+
+	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
 )
 
 //go:generate counterfeiter . ApiClient
@@ -49,8 +50,11 @@ func (self *ApiClientImpl) getFromCfApi(path string, cliConnection plugin.CliCon
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get access token: %s", err)
 	}
-
-	return self.HttpClient.Get(endpoint + path, accessToken)
+	isSsl, err := cliConnection.IsSSLDisabled()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to check SSL status: %s", err)
+	}
+	return self.HttpClient.Get(endpoint+path, accessToken, isSsl)
 }
 
 func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceInstance, error) {
@@ -106,7 +110,7 @@ func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([
 
 	startedApps := make([]sdkModels.GetAppsModel, 0, len(apps))
 
-	for _, app := range (apps) {
+	for _, app := range apps {
 		if app.State == "started" {
 			startedApps = append(startedApps, app)
 		}

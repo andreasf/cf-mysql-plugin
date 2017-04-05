@@ -1,27 +1,31 @@
 package cfmysql
 
 import (
-	"net/http"
-	"io/ioutil"
+	"crypto/tls"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 )
 
 //go:generate counterfeiter . Http
 type Http interface {
-	Get(endpoint string, access_token string) ([]byte, error)
+	Get(endpoint string, access_token string, skipSsl bool) ([]byte, error)
 }
 
-type HttpWrapper struct {}
+type HttpWrapper struct{}
 
-func (self *HttpWrapper) Get(url string, accessToken string) ([]byte, error) {
+func (self *HttpWrapper) Get(url string, accessToken string, skipSsl bool) ([]byte, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating request: %s", err)
 	}
 
 	request.Header.Add("Authorization", accessToken)
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipSsl},
+	}
+	client := &http.Client{Transport: tr}
 
-	client := new(http.Client)
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, err

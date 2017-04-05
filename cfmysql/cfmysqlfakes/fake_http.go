@@ -8,11 +8,12 @@ import (
 )
 
 type FakeHttp struct {
-	GetStub        func(endpoint string, access_token string) ([]byte, error)
+	GetStub        func(endpoint string, access_token string, skipSsl bool) ([]byte, error)
 	getMutex       sync.RWMutex
 	getArgsForCall []struct {
 		endpoint     string
 		access_token string
+		skipSsl      bool
 	}
 	getReturns struct {
 		result1 []byte
@@ -22,16 +23,17 @@ type FakeHttp struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeHttp) Get(endpoint string, access_token string) ([]byte, error) {
+func (fake *FakeHttp) Get(endpoint string, access_token string, skipSsl bool) ([]byte, error) {
 	fake.getMutex.Lock()
 	fake.getArgsForCall = append(fake.getArgsForCall, struct {
 		endpoint     string
 		access_token string
-	}{endpoint, access_token})
+		skipSsl      bool
+	}{endpoint, access_token, skipSsl})
 	fake.recordInvocation("Get", []interface{}{endpoint, access_token})
 	fake.getMutex.Unlock()
 	if fake.GetStub != nil {
-		return fake.GetStub(endpoint, access_token)
+		return fake.GetStub(endpoint, access_token, skipSsl)
 	} else {
 		return fake.getReturns.result1, fake.getReturns.result2
 	}
