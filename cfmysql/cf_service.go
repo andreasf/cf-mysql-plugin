@@ -38,7 +38,7 @@ func NewCfService() *CfServiceImpl {
 		ApiClient:  NewApiClient(),
 		SshRunner:  new(CfSshRunner),
 		PortWaiter: NewPortWaiter(),
-		HttpClient: new(HttpWrapper),
+		HttpClient: NewHttp(),
 	}
 }
 
@@ -70,23 +70,6 @@ func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) 
 	}
 
 	return getAvailableServices(bindingResult.Bindings, instances, space.Guid), nil
-}
-
-func (self *CfServiceImpl) getFromCfApi(path string, cliConnection plugin.CliConnection) ([]byte, error) {
-	endpoint, err := cliConnection.ApiEndpoint()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to get API endpoint: %s", err)
-	}
-
-	accessToken, err := cliConnection.AccessToken()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to get access token: %s", err)
-	}
-	skipSsl, err := cliConnection.IsSSLDisabled()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to get ssl status: %s", err)
-	}
-	return self.HttpClient.Get(endpoint+path, accessToken, skipSsl)
 }
 
 func (self *CfServiceImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {

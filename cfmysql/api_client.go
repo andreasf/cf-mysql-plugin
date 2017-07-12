@@ -50,11 +50,12 @@ func (self *ApiClientImpl) getFromCfApi(path string, cliConnection plugin.CliCon
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get access token: %s", err)
 	}
-	isSsl, err := cliConnection.IsSSLDisabled()
+
+	sslDisabled, err := cliConnection.IsSSLDisabled()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to check SSL status: %s", err)
 	}
-	return self.HttpClient.Get(endpoint+path, accessToken, isSsl)
+	return self.HttpClient.Get(endpoint+path, accessToken, sslDisabled)
 }
 
 func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceInstance, error) {
@@ -121,6 +122,6 @@ func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([
 
 func NewApiClient() *ApiClientImpl {
 	return &ApiClientImpl{
-		HttpClient: new(HttpWrapper),
+		HttpClient: NewHttp(),
 	}
 }

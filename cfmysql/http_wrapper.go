@@ -1,7 +1,6 @@
 package cfmysql
 
 import (
-	"crypto/tls"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,19 +11,24 @@ type Http interface {
 	Get(endpoint string, access_token string, skipSsl bool) ([]byte, error)
 }
 
-type HttpWrapper struct{}
+type HttpWrapper struct {
+	HttpClientFactory HttpClientFactory
+}
 
-func (self *HttpWrapper) Get(url string, accessToken string, skipSsl bool) ([]byte, error) {
+func NewHttp() Http {
+	return &HttpWrapper{
+		HttpClientFactory: NewHttpClientFactory(),
+	}
+}
+
+func (self *HttpWrapper) Get(url string, accessToken string, sslDisabled bool) ([]byte, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating request: %s", err)
 	}
 
 	request.Header.Add("Authorization", accessToken)
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: skipSsl},
-	}
-	client := &http.Client{Transport: tr}
+	client := self.HttpClientFactory.NewClient(sslDisabled)
 
 	response, err := client.Do(request)
 	if err != nil {

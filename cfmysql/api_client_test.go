@@ -84,6 +84,7 @@ var _ = Describe("ApiClient", func() {
 		It("Gets a list of instances", func() {
 			cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
 			cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
+			cliConnection.IsSSLDisabledReturns(true, nil)
 
 			instances, err := apiClient.GetServiceInstances(cliConnection)
 
@@ -94,13 +95,15 @@ var _ = Describe("ApiClient", func() {
 			Expect(cliConnection.ApiEndpointCallCount()).To(Equal(2))
 
 			Expect(mockHttp.GetCallCount()).To(Equal(2))
-			url, access_token := mockHttp.GetArgsForCall(0)
+			url, access_token, sslDisabled := mockHttp.GetArgsForCall(0)
 			Expect(url).To(Equal("https://cf.api.url/v2/service_instances"))
 			Expect(access_token).To(Equal("bearer my-secret-token"))
+			Expect(sslDisabled).To(BeTrue())
 
-			url2, access_token2 := mockHttp.GetArgsForCall(1)
+			url2, access_token2, sslDisabled := mockHttp.GetArgsForCall(1)
 			Expect(url2).To(Equal("https://cf.api.url/v2/service_instances?page=2"))
 			Expect(access_token2).To(Equal("bearer my-secret-token"))
+			Expect(sslDisabled).To(BeTrue())
 		})
 	})
 
@@ -109,6 +112,7 @@ var _ = Describe("ApiClient", func() {
 			It("Returns the list of bindings", func() {
 				cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
 				cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
+				cliConnection.IsSSLDisabledReturns(true, nil)
 
 				bindings, err := apiClient.GetServiceBindings(cliConnection)
 
@@ -121,13 +125,15 @@ var _ = Describe("ApiClient", func() {
 				Expect(cliConnection.ApiEndpointCallCount()).To(Equal(2))
 
 				Expect(mockHttp.GetCallCount()).To(Equal(2))
-				url, access_token := mockHttp.GetArgsForCall(0)
+				url, access_token, sslDisabled := mockHttp.GetArgsForCall(0)
 				Expect(url).To(Equal("https://cf.api.url/v2/service_bindings"))
 				Expect(access_token).To(Equal("bearer my-secret-token"))
+				Expect(sslDisabled).To(BeTrue())
 
-				url2, access_token2 := mockHttp.GetArgsForCall(1)
+				url2, access_token2, sslDisabled := mockHttp.GetArgsForCall(1)
 				Expect(url2).To(Equal("https://cf.api.url/v2/service_bindings?page=2"))
 				Expect(access_token2).To(Equal("bearer my-secret-token"))
+				Expect(sslDisabled).To(BeTrue())
 			})
 		})
 	})

@@ -12,7 +12,7 @@ import (
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 )
 
-var _ = Describe("CfSdkClient", func() {
+var _ = Describe("CfService", func() {
 	var apiClient *cfmysqlfakes.FakeApiClient
 	var service *CfServiceImpl
 	var cliConnection *pluginfakes.FakeCliConnection
@@ -22,8 +22,6 @@ var _ = Describe("CfSdkClient", func() {
 
 	BeforeEach(func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
-		cliConnection.ApiEndpointReturns("https://cf.api.url", nil)
-		cliConnection.AccessTokenReturns("bearer my-secret-token", nil)
 		cliConnection.GetCurrentSpaceReturns(plugin_models.Space{
 			SpaceFields: plugin_models.SpaceFields{
 				Guid: "space-guid-a",
