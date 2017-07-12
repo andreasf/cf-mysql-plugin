@@ -10,6 +10,13 @@ Cloud Foundry apps. Use it to
 * manually adjust schema or contents in development environments
 * dump and restore databases
 
+## Contents
+
+* [Usage](#usage)
+* [Installing and uninstalling](#installing-and-uninstalling)
+* [Building](#building)
+* [Details](#details)
+
 ## Usage
 
 ```bash
@@ -117,11 +124,16 @@ $ cf mysqldump my-db table1 table2 --single-transaction > two-tables.sql
 
 ## Installing and uninstalling
 
-Download a binary release or build yourself by running `go build`. Then, install the plugin with
+The easiest way is to install from the repository:
 
 ```bash
-$ cd /path/to/plugin
-$ cf install-plugin ./cf-mysql-plugin
+$ cf install-plugin -r "CF-Community" mysql-plugin
+```
+
+You can also download a binary release or build yourself by running `go build`. Then, install the plugin with
+
+```bash
+$ cf install-plugin /path/to/cf-mysql-plugin
 ```
 
 The plugin can be uninstalled with:
