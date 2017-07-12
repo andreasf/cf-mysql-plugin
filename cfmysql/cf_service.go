@@ -1,9 +1,10 @@
 package cfmysql
 
 import (
-	"code.cloudfoundry.org/cli/plugin"
 	"fmt"
 	"strings"
+
+	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 )
@@ -34,8 +35,8 @@ type CfServiceImpl struct {
 
 func NewCfService() *CfServiceImpl {
 	return &CfServiceImpl{
-		ApiClient: NewApiClient(),
-		SshRunner: new(CfSshRunner),
+		ApiClient:  NewApiClient(),
+		SshRunner:  new(CfSshRunner),
 		PortWaiter: NewPortWaiter(),
 		HttpClient: new(HttpWrapper),
 	}
@@ -81,8 +82,11 @@ func (self *CfServiceImpl) getFromCfApi(path string, cliConnection plugin.CliCon
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get access token: %s", err)
 	}
-
-	return self.HttpClient.Get(endpoint + path, accessToken)
+	skipSsl, err := cliConnection.IsSSLDisabled()
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get ssl status: %s", err)
+	}
+	return self.HttpClient.Get(endpoint+path, accessToken, skipSsl)
 }
 
 func (self *CfServiceImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
@@ -119,10 +123,10 @@ func getAvailableServices(bindings []pluginModels.ServiceBinding, instances []pl
 
 func makeServiceModel(name string, binding pluginModels.ServiceBinding) MysqlService {
 	return MysqlService{
-		Name: name,
+		Name:     name,
 		Hostname: binding.Hostname,
-		Port: binding.Port,
-		DbName: binding.DbName,
+		Port:     binding.Port,
+		DbName:   binding.DbName,
 		Username: binding.Username,
 		Password: binding.Password,
 	}
