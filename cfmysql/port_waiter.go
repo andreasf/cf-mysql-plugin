@@ -12,13 +12,19 @@ type PortWaiter interface {
 	WaitUntilOpen(localPort int)
 }
 
+func NewPortWaiter(netWrapper NetWrapper) PortWaiter {
+	return &portWaiter{
+		NetWrapper: netWrapper,
+	}
+}
+
 const SLEEP_TIME = 100
 
-type TcpPortWaiter struct {
+type portWaiter struct {
 	NetWrapper NetWrapper
 }
 
-func (self *TcpPortWaiter) WaitUntilOpen(localPort int) {
+func (self *portWaiter) WaitUntilOpen(localPort int) {
 	address := "127.0.0.1:" + strconv.Itoa(localPort)
 
 	var conn net.Conn
@@ -28,10 +34,4 @@ func (self *TcpPortWaiter) WaitUntilOpen(localPort int) {
 		conn, err = self.NetWrapper.Dial("tcp", address)
 	}
 	self.NetWrapper.Close(conn)
-}
-
-func NewPortWaiter(netWrapper NetWrapper) PortWaiter {
-	return &TcpPortWaiter{
-		NetWrapper: netWrapper,
-	}
 }

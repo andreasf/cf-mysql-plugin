@@ -27,7 +27,7 @@ func newPlugin() *cfmysql.MysqlPlugin {
 	http := cfmysql.NewHttp(httpClientFactory)
 	apiClient := cfmysql.NewApiClient(http)
 
-	sshRunner := new(cfmysql.CfSshRunner)
+	sshRunner := cfmysql.NewSshRunner()
 	netWrapper := cfmysql.NewNetWrapper()
 	waiter := cfmysql.NewPortWaiter(netWrapper)
 	cfService := cfmysql.NewCfService(apiClient, sshRunner, waiter, http)

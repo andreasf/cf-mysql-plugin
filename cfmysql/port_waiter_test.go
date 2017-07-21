@@ -13,7 +13,7 @@ import (
 
 var _ = Describe("PortWaiter", func() {
 	var netWrapper *cfmysqlfakes.FakeNetWrapper
-	var portWaiter *TcpPortWaiter
+	var portWaiter PortWaiter
 
 	const SUCCEED_AFTER_TRIES = 5
 	dialCount := 0
@@ -28,9 +28,7 @@ var _ = Describe("PortWaiter", func() {
 
 	BeforeEach(func() {
 		netWrapper = new(cfmysqlfakes.FakeNetWrapper)
-		portWaiter = &TcpPortWaiter{
-			NetWrapper: netWrapper,
-		}
+		portWaiter = NewPortWaiter(netWrapper)
 	})
 
 	It("Waits until the port is open", func() {

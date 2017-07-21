@@ -11,9 +11,13 @@ type SshRunner interface {
 	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int)
 }
 
-type CfSshRunner struct{}
+func NewSshRunner() SshRunner {
+	return new(sshRunner)
+}
 
-func (self *CfSshRunner) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
+type sshRunner struct{}
+
+func (self *sshRunner) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
 	tunnelSpec := strconv.Itoa(localPort) + ":" + toService.Hostname + ":" + toService.Port
 	_, err := cliConnection.CliCommand("ssh", throughApp, "-N", "-L", tunnelSpec)
 

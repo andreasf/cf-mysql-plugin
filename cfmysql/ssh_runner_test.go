@@ -8,9 +8,9 @@ import (
 	"errors"
 )
 
-var _ = Describe("CfSshRunner", func() {
+var _ = Describe("SshRunner", func() {
 	var cliConnection *pluginfakes.FakeCliConnection
-	var sshRunner *CfSshRunner
+	var sshRunner SshRunner
 	service := MysqlService{
 		Name: "database-a",
 		AppName: "",
@@ -23,7 +23,7 @@ var _ = Describe("CfSshRunner", func() {
 
 	BeforeEach(func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
-		sshRunner = new(CfSshRunner)
+		sshRunner = NewSshRunner()
 	})
 
 	Context("When opening the tunnel", func() {
