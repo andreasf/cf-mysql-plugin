@@ -16,6 +16,15 @@ type CfService interface {
 	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int)
 }
 
+func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient HttpWrapper) *cfService {
+	return &cfService{
+		apiClient:  apiClient,
+		sshRunner:  runner,
+		portWaiter: waiter,
+		httpClient: httpClient,
+	}
+}
+
 type MysqlService struct {
 	Name     string
 	AppName  string
@@ -31,15 +40,6 @@ type cfService struct {
 	httpClient HttpWrapper
 	portWaiter PortWaiter
 	sshRunner  SshRunner
-}
-
-func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient HttpWrapper) *cfService {
-	return &cfService{
-		apiClient:  apiClient,
-		sshRunner:  runner,
-		portWaiter: waiter,
-		httpClient: httpClient,
-	}
 }
 
 type BindingResult struct {

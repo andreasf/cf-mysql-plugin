@@ -438,7 +438,7 @@ func NewPluginAndMocks() (*MysqlPlugin, Mocks) {
 		PortFinder:    new(cfmysqlfakes.FakePortFinder),
 	}
 
-	mysqlPlugin := NewPlugin(PluginConf{
+	mysqlPlugin := NewMysqlPlugin(PluginConf{
 		mocks.In,
 		mocks.Out,
 		mocks.Err,

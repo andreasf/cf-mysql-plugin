@@ -8,11 +8,11 @@ type ExecWrapper interface {
 	Run(*exec.Cmd) error
 }
 
-type execWrapper struct{}
-
 func NewExecWrapper() ExecWrapper {
 	return new(execWrapper)
 }
+
+type execWrapper struct{}
 
 func (self *execWrapper) LookPath(file string) (string, error) {
 	return exec.LookPath(file)

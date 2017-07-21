@@ -11,14 +11,14 @@ type HttpWrapper interface {
 	Get(endpoint string, access_token string, skipSsl bool) ([]byte, error)
 }
 
-type httpWrapper struct {
-	httpClientFactory HttpClientFactory
-}
-
-func NewHttp(factory HttpClientFactory) HttpWrapper {
+func NewHttpWrapper(factory HttpClientFactory) HttpWrapper {
 	return &httpWrapper{
 		httpClientFactory: factory,
 	}
+}
+
+type httpWrapper struct {
+	httpClientFactory HttpClientFactory
 }
 
 func (self *httpWrapper) Get(url string, accessToken string, sslDisabled bool) ([]byte, error) {

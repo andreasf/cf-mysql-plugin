@@ -17,7 +17,7 @@ var _ = Describe("HttpWrapper", func() {
 	Context("When SSL is disabled", func() {
 		It("Configures an HTTP client without cert validation", func() {
 			mockFactory := new(cfmysqlfakes.FakeHttpClientFactory)
-			httpWrapper := cfmysql.NewHttp(mockFactory)
+			httpWrapper := cfmysql.NewHttpWrapper(mockFactory)
 
 			mockFactory.NewClientReturns(new(http.Client))
 			httpWrapper.Get("http://0.0.0.0/foo", "the-authorization-value", true)
@@ -31,7 +31,7 @@ var _ = Describe("HttpWrapper", func() {
 	Context("When SSL is enabled", func() {
 		It("Does not disable cert validation", func() {
 			mockFactory := new(cfmysqlfakes.FakeHttpClientFactory)
-			httpWrapper := cfmysql.NewHttp(mockFactory)
+			httpWrapper := cfmysql.NewHttpWrapper(mockFactory)
 
 			mockFactory.NewClientReturns(new(http.Client))
 			httpWrapper.Get("http://0.0.0.0/foo", "the-authorization-value", false)
@@ -111,5 +111,5 @@ var _ = Describe("HttpWrapper", func() {
 })
 
 func MakeHttp() cfmysql.HttpWrapper {
-	return cfmysql.NewHttp(cfmysql.NewHttpClientFactory())
+	return cfmysql.NewHttpWrapper(cfmysql.NewHttpClientFactory())
 }

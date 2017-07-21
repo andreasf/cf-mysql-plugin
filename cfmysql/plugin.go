@@ -17,6 +17,17 @@ type MysqlPlugin struct {
 	exitCode    int
 }
 
+func NewMysqlPlugin(conf PluginConf) *MysqlPlugin {
+	return &MysqlPlugin{
+		In:          conf.In,
+		Out:         conf.Out,
+		Err:         conf.Err,
+		CfService:   conf.CfService,
+		PortFinder:  conf.PortFinder,
+		MysqlRunner: conf.MysqlRunner,
+	}
+}
+
 func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 	return plugin.PluginMetadata{
 		Name: "mysql",
@@ -185,15 +196,4 @@ type PluginConf struct {
 	CfService   CfService
 	MysqlRunner MysqlRunner
 	PortFinder  PortFinder
-}
-
-func NewPlugin(conf PluginConf) *MysqlPlugin {
-	return &MysqlPlugin{
-		In:          conf.In,
-		Out:         conf.Out,
-		Err:         conf.Err,
-		CfService:   conf.CfService,
-		PortFinder:  conf.PortFinder,
-		MysqlRunner: conf.MysqlRunner,
-	}
 }
