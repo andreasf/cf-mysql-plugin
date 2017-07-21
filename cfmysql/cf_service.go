@@ -28,12 +28,12 @@ type MysqlService struct {
 
 type cfService struct {
 	apiClient  ApiClient
-	httpClient Http
+	httpClient HttpWrapper
 	portWaiter PortWaiter
 	sshRunner  SshRunner
 }
 
-func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient Http) *cfService {
+func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient HttpWrapper) *cfService {
 	return &cfService{
 		apiClient:  apiClient,
 		sshRunner:  runner,

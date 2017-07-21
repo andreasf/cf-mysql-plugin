@@ -18,7 +18,7 @@ var _ = Describe("CfService", func() {
 	var cliConnection *pluginfakes.FakeCliConnection
 	var sshRunner *cfmysqlfakes.FakeSshRunner
 	var portWaiter *cfmysqlfakes.FakePortWaiter
-	var mockHttp *cfmysqlfakes.FakeHttp
+	var mockHttp *cfmysqlfakes.FakeHttpWrapper
 
 	BeforeEach(func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
@@ -33,7 +33,7 @@ var _ = Describe("CfService", func() {
 		sshRunner = new(cfmysqlfakes.FakeSshRunner)
 		portWaiter = new(cfmysqlfakes.FakePortWaiter)
 
-		mockHttp = new(cfmysqlfakes.FakeHttp)
+		mockHttp = new(cfmysqlfakes.FakeHttpWrapper)
 
 		service = NewCfService(apiClient, sshRunner, portWaiter, mockHttp)
 	})

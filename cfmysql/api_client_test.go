@@ -17,11 +17,11 @@ import (
 var _ = Describe("ApiClient", func() {
 	var cliConnection *pluginfakes.FakeCliConnection
 	var apiClient ApiClient
-	var mockHttp *cfmysqlfakes.FakeHttp
+	var mockHttp *cfmysqlfakes.FakeHttpWrapper
 
 	BeforeEach(func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
-		mockHttp = new(cfmysqlfakes.FakeHttp)
+		mockHttp = new(cfmysqlfakes.FakeHttpWrapper)
 		mockHttp.GetStub = func(url string, accessToken string, skipSsl bool) ([]byte, error) {
 			switch url {
 			case "https://cf.api.url/v2/service_bindings":

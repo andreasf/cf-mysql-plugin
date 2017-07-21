@@ -7,7 +7,7 @@ import (
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 )
 
-type FakeHttp struct {
+type FakeHttpWrapper struct {
 	GetStub        func(endpoint string, access_token string, skipSsl bool) ([]byte, error)
 	getMutex       sync.RWMutex
 	getArgsForCall []struct {
@@ -27,7 +27,7 @@ type FakeHttp struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeHttp) Get(endpoint string, access_token string, skipSsl bool) ([]byte, error) {
+func (fake *FakeHttpWrapper) Get(endpoint string, access_token string, skipSsl bool) ([]byte, error) {
 	fake.getMutex.Lock()
 	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
 	fake.getArgsForCall = append(fake.getArgsForCall, struct {
@@ -46,19 +46,19 @@ func (fake *FakeHttp) Get(endpoint string, access_token string, skipSsl bool) ([
 	return fake.getReturns.result1, fake.getReturns.result2
 }
 
-func (fake *FakeHttp) GetCallCount() int {
+func (fake *FakeHttpWrapper) GetCallCount() int {
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
 	return len(fake.getArgsForCall)
 }
 
-func (fake *FakeHttp) GetArgsForCall(i int) (string, string, bool) {
+func (fake *FakeHttpWrapper) GetArgsForCall(i int) (string, string, bool) {
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
 	return fake.getArgsForCall[i].endpoint, fake.getArgsForCall[i].access_token, fake.getArgsForCall[i].skipSsl
 }
 
-func (fake *FakeHttp) GetReturns(result1 []byte, result2 error) {
+func (fake *FakeHttpWrapper) GetReturns(result1 []byte, result2 error) {
 	fake.GetStub = nil
 	fake.getReturns = struct {
 		result1 []byte
@@ -66,7 +66,7 @@ func (fake *FakeHttp) GetReturns(result1 []byte, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeHttp) GetReturnsOnCall(i int, result1 []byte, result2 error) {
+func (fake *FakeHttpWrapper) GetReturnsOnCall(i int, result1 []byte, result2 error) {
 	fake.GetStub = nil
 	if fake.getReturnsOnCall == nil {
 		fake.getReturnsOnCall = make(map[int]struct {
@@ -80,7 +80,7 @@ func (fake *FakeHttp) GetReturnsOnCall(i int, result1 []byte, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeHttp) Invocations() map[string][][]interface{} {
+func (fake *FakeHttpWrapper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.getMutex.RLock()
@@ -92,7 +92,7 @@ func (fake *FakeHttp) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeHttp) recordInvocation(key string, args []interface{}) {
+func (fake *FakeHttpWrapper) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -104,4 +104,4 @@ func (fake *FakeHttp) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ cfmysql.Http = new(FakeHttp)
+var _ cfmysql.HttpWrapper = new(FakeHttpWrapper)

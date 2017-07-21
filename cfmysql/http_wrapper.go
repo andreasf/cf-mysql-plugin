@@ -6,29 +6,29 @@ import (
 	"net/http"
 )
 
-//go:generate counterfeiter . Http
-type Http interface {
+//go:generate counterfeiter . HttpWrapper
+type HttpWrapper interface {
 	Get(endpoint string, access_token string, skipSsl bool) ([]byte, error)
 }
 
-type HttpWrapper struct {
-	HttpClientFactory HttpClientFactory
+type httpWrapper struct {
+	httpClientFactory HttpClientFactory
 }
 
-func NewHttp(factory HttpClientFactory) Http {
-	return &HttpWrapper{
-		HttpClientFactory: factory,
+func NewHttp(factory HttpClientFactory) HttpWrapper {
+	return &httpWrapper{
+		httpClientFactory: factory,
 	}
 }
 
-func (self *HttpWrapper) Get(url string, accessToken string, sslDisabled bool) ([]byte, error) {
+func (self *httpWrapper) Get(url string, accessToken string, sslDisabled bool) ([]byte, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("Error creating request: %s", err)
 	}
 
 	request.Header.Add("Authorization", accessToken)
-	client := self.HttpClientFactory.NewClient(sslDisabled)
+	client := self.httpClientFactory.NewClient(sslDisabled)
 
 	response, err := client.Do(request)
 	if err != nil {

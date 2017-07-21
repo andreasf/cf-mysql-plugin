@@ -18,7 +18,7 @@ type ApiClient interface {
 }
 
 type apiClient struct {
-	httpClient Http
+	httpClient HttpWrapper
 }
 
 func (self *apiClient) GetServiceInstances(cliConnection plugin.CliConnection) ([]pluginModels.ServiceInstance, error) {
@@ -120,7 +120,7 @@ func (self *apiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]sdk
 	return startedApps, nil
 }
 
-func NewApiClient(httpClient Http) *apiClient {
+func NewApiClient(httpClient HttpWrapper) *apiClient {
 	return &apiClient{
 		httpClient: httpClient,
 	}
