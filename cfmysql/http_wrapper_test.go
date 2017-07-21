@@ -55,7 +55,7 @@ var _ = Describe("HttpWrapper", func() {
 				ghttp.VerifyHeaderKV("Authorization", "the-authorization-value"),
 			))
 
-			httpWrapper := cfmysql.NewHttp()
+			httpWrapper := MakeHttp()
 
 			response, err := httpWrapper.Get(mockServer.URL()+"/the/expected/path", "the-authorization-value", true)
 
@@ -68,7 +68,7 @@ var _ = Describe("HttpWrapper", func() {
 
 	Context("When the request returns an error", func() {
 		It("Returns an error and no response", func() {
-			httpWrapper := cfmysql.NewHttp()
+			httpWrapper := MakeHttp()
 
 			response, err := httpWrapper.Get("http://localhost:52719/no/server/here", "foo", true)
 
@@ -85,7 +85,7 @@ var _ = Describe("HttpWrapper", func() {
 				ghttp.VerifyRequest("GET", "/need/coffee")),
 			)
 
-			httpWrapper := cfmysql.NewHttp()
+			httpWrapper := MakeHttp()
 			response, err := httpWrapper.Get(mockServer.URL()+"/need/coffee", "foo", true)
 
 			Expect(err).To(Equal(fmt.Errorf("HTTP status 418 accessing %s/need/coffee", mockServer.URL())))
@@ -103,7 +103,7 @@ var _ = Describe("HttpWrapper", func() {
 				ghttp.VerifyRequest("GET", "/this/shall/crash")),
 			)
 
-			httpWrapper := cfmysql.NewHttp()
+			httpWrapper := MakeHttp()
 			response, err := httpWrapper.Get(mockServer.URL()+"/this/shall/crash", "foo", true)
 
 			Expect(err).To(Equal(fmt.Errorf("HTTP status 500 accessing %s/this/shall/crash", mockServer.URL())))
@@ -113,3 +113,7 @@ var _ = Describe("HttpWrapper", func() {
 		})
 	})
 })
+
+func MakeHttp() cfmysql.Http {
+	return cfmysql.NewHttp(cfmysql.NewHttpClientFactory())
+}

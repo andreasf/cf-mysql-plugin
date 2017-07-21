@@ -120,8 +120,8 @@ func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([
 	return startedApps, nil
 }
 
-func NewApiClient() *ApiClientImpl {
+func NewApiClient(httpClient Http) *ApiClientImpl {
 	return &ApiClientImpl{
-		HttpClient: NewHttp(),
+		HttpClient: httpClient,
 	}
 }

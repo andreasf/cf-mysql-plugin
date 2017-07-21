@@ -4,7 +4,6 @@ import (
 	"code.cloudfoundry.org/cli/plugin"
 	"io"
 	"fmt"
-	"os"
 	"code.cloudfoundry.org/cli/plugin/models"
 )
 
@@ -179,13 +178,22 @@ func (self *MysqlPlugin) showServices(cliConnection plugin.CliConnection, comman
 	}
 }
 
-func NewPlugin() *MysqlPlugin {
+type PluginConf struct {
+	In          io.Reader
+	Out         io.Writer
+	Err         io.Writer
+	CfService   CfService
+	MysqlRunner MysqlRunner
+	PortFinder  PortFinder
+}
+
+func NewPlugin(conf PluginConf) *MysqlPlugin {
 	return &MysqlPlugin{
-		In: os.Stdin,
-		Out: os.Stdout,
-		Err: os.Stderr,
-		CfService: NewCfService(),
-		PortFinder: new(FreePortFinder),
-		MysqlRunner: NewMysqlRunner(),
+		In:          conf.In,
+		Out:         conf.Out,
+		Err:         conf.Err,
+		CfService:   conf.CfService,
+		PortFinder:  conf.PortFinder,
+		MysqlRunner: conf.MysqlRunner,
 	}
 }

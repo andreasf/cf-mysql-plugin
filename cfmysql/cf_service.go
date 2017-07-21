@@ -33,12 +33,12 @@ type CfServiceImpl struct {
 	SshRunner  SshRunner
 }
 
-func NewCfService() *CfServiceImpl {
+func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient Http) *CfServiceImpl {
 	return &CfServiceImpl{
-		ApiClient:  NewApiClient(),
-		SshRunner:  new(CfSshRunner),
-		PortWaiter: NewPortWaiter(),
-		HttpClient: NewHttp(),
+		ApiClient:  apiClient,
+		SshRunner:  runner,
+		PortWaiter: waiter,
+		HttpClient: httpClient,
 	}
 }
 

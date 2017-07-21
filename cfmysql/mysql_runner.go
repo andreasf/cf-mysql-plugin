@@ -82,8 +82,8 @@ func (self *MysqlClientRunner) MakeMysqlCommand(hostname string, port int, dbNam
 	return exec.Command("mysql", "-u", "username", "-p" + password, "-h", "hostname", "-P", strconv.Itoa(port), dbName)
 }
 
-func NewMysqlRunner() MysqlRunner {
+func NewMysqlRunner(execWrapper Exec) MysqlRunner {
 	return &MysqlClientRunner{
-		ExecWrapper: &ExecWrapper{},
+		ExecWrapper: execWrapper,
 	}
 }

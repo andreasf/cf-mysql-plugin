@@ -15,7 +15,7 @@ import (
 var _ = Describe("Plugin", func() {
 	Context("When calling 'cf plugins'", func() {
 		It("Shows the mysql plugin with the current version", func() {
-			mysqlPlugin := NewPlugin()
+			mysqlPlugin, _ := NewPluginAndMocks()
 
 			Expect(mysqlPlugin.GetMetadata().Name).To(Equal("mysql"))
 			Expect(mysqlPlugin.GetMetadata().Version).To(Equal(plugin.VersionType{
@@ -28,7 +28,7 @@ var _ = Describe("Plugin", func() {
 
 	Context("When calling 'cf mysql -h'", func() {
 		It("Shows instructions for 'cf mysql'", func() {
-			mysqlPlugin := NewPlugin()
+			mysqlPlugin, _ := NewPluginAndMocks()
 
 			Expect(mysqlPlugin.GetMetadata().Commands).To(HaveLen(2))
 			Expect(mysqlPlugin.GetMetadata().Commands[0].Name).To(Equal("mysql"))
@@ -41,16 +41,16 @@ var _ = Describe("Plugin", func() {
 
 			BeforeEach(func() {
 				serviceA = MysqlService{
-					Name: "database-a",
+					Name:     "database-a",
 					Hostname: "database-a.host",
-					Port: "123",
-					DbName: "dbname-a",
+					Port:     "123",
+					DbName:   "dbname-a",
 				}
 				serviceB = MysqlService{
-					Name: "database-b",
+					Name:     "database-b",
 					Hostname: "database-b.host",
-					Port: "234",
-					DbName: "dbname-b",
+					Port:     "234",
+					DbName:   "dbname-b",
 				}
 			})
 
@@ -103,18 +103,18 @@ var _ = Describe("Plugin", func() {
 
 		BeforeEach(func() {
 			serviceA = MysqlService{
-				Name: "database-a",
+				Name:     "database-a",
 				Hostname: "database-a.host",
-				Port: "123",
-				DbName: "dbname-a",
+				Port:     "123",
+				DbName:   "dbname-a",
 				Username: "username",
 				Password: "password",
 			}
 			serviceB = MysqlService{
-				Name: "database-b",
+				Name:     "database-b",
 				Hostname: "database-b.host",
-				Port: "234",
-				DbName: "dbname-b",
+				Port:     "234",
+				DbName:   "dbname-b",
 			}
 		})
 
@@ -260,7 +260,7 @@ var _ = Describe("Plugin", func() {
 
 	Context("When calling 'cf mysqldump -h'", func() {
 		It("Shows instructions for 'cf mysqldump'", func() {
-			mysqlPlugin := NewPlugin()
+			mysqlPlugin, _ := NewPluginAndMocks()
 
 			Expect(mysqlPlugin.GetMetadata().Commands).To(HaveLen(2))
 			Expect(mysqlPlugin.GetMetadata().Commands[1].Name).To(Equal("mysqldump"))
@@ -273,16 +273,16 @@ var _ = Describe("Plugin", func() {
 
 			BeforeEach(func() {
 				serviceA = MysqlService{
-					Name: "database-a",
+					Name:     "database-a",
 					Hostname: "database-a.host",
-					Port: "123",
-					DbName: "dbname-a",
+					Port:     "123",
+					DbName:   "dbname-a",
 				}
 				serviceB = MysqlService{
-					Name: "database-b",
+					Name:     "database-b",
 					Hostname: "database-b.host",
-					Port: "234",
-					DbName: "dbname-b",
+					Port:     "234",
+					DbName:   "dbname-b",
 				}
 			})
 
@@ -336,18 +336,18 @@ var _ = Describe("Plugin", func() {
 
 		BeforeEach(func() {
 			serviceA = MysqlService{
-				Name: "database-a",
+				Name:     "database-a",
 				Hostname: "database-a.host",
-				Port: "123",
-				DbName: "dbname-a",
+				Port:     "123",
+				DbName:   "dbname-a",
 				Username: "username",
 				Password: "password",
 			}
 			serviceB = MysqlService{
-				Name: "database-b",
+				Name:     "database-b",
 				Hostname: "database-b.host",
-				Port: "234",
-				DbName: "dbname-b",
+				Port:     "234",
+				DbName:   "dbname-b",
 			}
 		})
 
@@ -427,25 +427,25 @@ type Mocks struct {
 	MysqlRunner   *cfmysqlfakes.FakeMysqlRunner
 }
 
-func NewPluginAndMocks() (MysqlPlugin, Mocks) {
+func NewPluginAndMocks() (*MysqlPlugin, Mocks) {
 	mocks := Mocks{
-		In: gbytes.NewBuffer(),
-		Out: gbytes.NewBuffer(),
-		Err: gbytes.NewBuffer(),
-		CfService: new(cfmysqlfakes.FakeCfService),
+		In:            gbytes.NewBuffer(),
+		Out:           gbytes.NewBuffer(),
+		Err:           gbytes.NewBuffer(),
+		CfService:     new(cfmysqlfakes.FakeCfService),
 		CliConnection: new(pluginfakes.FakeCliConnection),
-		MysqlRunner: new(cfmysqlfakes.FakeMysqlRunner),
-		PortFinder: new(cfmysqlfakes.FakePortFinder),
+		MysqlRunner:   new(cfmysqlfakes.FakeMysqlRunner),
+		PortFinder:    new(cfmysqlfakes.FakePortFinder),
 	}
 
-	mysqlPlugin := MysqlPlugin{
-		In: mocks.In,
-		Out: mocks.Out,
-		Err: mocks.Err,
-		CfService: mocks.CfService,
-		MysqlRunner: mocks.MysqlRunner,
-		PortFinder: mocks.PortFinder,
-	}
+	mysqlPlugin := NewPlugin(PluginConf{
+		mocks.In,
+		mocks.Out,
+		mocks.Err,
+		mocks.CfService,
+		mocks.MysqlRunner,
+		mocks.PortFinder,
+	})
 
 	return mysqlPlugin, mocks
 }

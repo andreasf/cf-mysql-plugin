@@ -30,8 +30,8 @@ func (self *TcpPortWaiter) WaitUntilOpen(localPort int) {
 	self.NetWrapper.Close(conn)
 }
 
-func NewPortWaiter() PortWaiter {
+func NewPortWaiter(netWrapper Net) PortWaiter {
 	return &TcpPortWaiter{
-		NetWrapper: new(NetWrapper),
+		NetWrapper: netWrapper,
 	}
 }

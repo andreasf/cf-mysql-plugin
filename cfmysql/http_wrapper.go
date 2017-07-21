@@ -15,9 +15,9 @@ type HttpWrapper struct {
 	HttpClientFactory HttpClientFactory
 }
 
-func NewHttp() Http {
+func NewHttp(factory HttpClientFactory) Http {
 	return &HttpWrapper{
-		HttpClientFactory: NewHttpClientFactory(),
+		HttpClientFactory: factory,
 	}
 }
 
