@@ -26,19 +26,19 @@ type MysqlService struct {
 	Password string
 }
 
-type CfServiceImpl struct {
-	ApiClient  ApiClient
-	HttpClient Http
-	PortWaiter PortWaiter
-	SshRunner  SshRunner
+type cfService struct {
+	apiClient  ApiClient
+	httpClient Http
+	portWaiter PortWaiter
+	sshRunner  SshRunner
 }
 
-func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient Http) *CfServiceImpl {
-	return &CfServiceImpl{
-		ApiClient:  apiClient,
-		SshRunner:  runner,
-		PortWaiter: waiter,
-		HttpClient: httpClient,
+func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient Http) *cfService {
+	return &cfService{
+		apiClient:  apiClient,
+		sshRunner:  runner,
+		portWaiter: waiter,
+		httpClient: httpClient,
 	}
 }
 
@@ -47,14 +47,14 @@ type BindingResult struct {
 	Err      error
 }
 
-func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
+func (self *cfService) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
 	bindingChan := make(chan BindingResult, 0)
 	go func() {
-		bindings, err := self.ApiClient.GetServiceBindings(cliConnection)
+		bindings, err := self.apiClient.GetServiceBindings(cliConnection)
 		bindingChan <- BindingResult{Bindings: bindings, Err: err}
 	}()
 
-	instances, err := self.ApiClient.GetServiceInstances(cliConnection)
+	instances, err := self.apiClient.GetServiceInstances(cliConnection)
 	if err != nil {
 		return nil, err
 	}
@@ -72,14 +72,14 @@ func (self *CfServiceImpl) GetMysqlServices(cliConnection plugin.CliConnection) 
 	return getAvailableServices(bindingResult.Bindings, instances, space.Guid), nil
 }
 
-func (self *CfServiceImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
-	return self.ApiClient.GetStartedApps(cliConnection)
+func (self *cfService) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
+	return self.apiClient.GetStartedApps(cliConnection)
 }
 
-func (self *CfServiceImpl) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
-	go self.SshRunner.OpenSshTunnel(cliConnection, toService, throughApp, localPort)
+func (self *cfService) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
+	go self.sshRunner.OpenSshTunnel(cliConnection, toService, throughApp, localPort)
 
-	self.PortWaiter.WaitUntilOpen(localPort)
+	self.portWaiter.WaitUntilOpen(localPort)
 }
 
 func getAvailableServices(bindings []pluginModels.ServiceBinding, instances []pluginModels.ServiceInstance, spaceGuid string) []MysqlService {

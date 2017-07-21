@@ -14,7 +14,7 @@ import (
 
 var _ = Describe("CfService", func() {
 	var apiClient *cfmysqlfakes.FakeApiClient
-	var service *CfServiceImpl
+	var service CfService
 	var cliConnection *pluginfakes.FakeCliConnection
 	var sshRunner *cfmysqlfakes.FakeSshRunner
 	var portWaiter *cfmysqlfakes.FakePortWaiter
@@ -35,12 +35,7 @@ var _ = Describe("CfService", func() {
 
 		mockHttp = new(cfmysqlfakes.FakeHttp)
 
-		service = &CfServiceImpl{
-			ApiClient: apiClient,
-			SshRunner: sshRunner,
-			PortWaiter: portWaiter,
-			HttpClient: mockHttp,
-		}
+		service = NewCfService(apiClient, sshRunner, portWaiter, mockHttp)
 	})
 
 	Context("GetMysqlServices: retrieving available MySQL services", func() {
@@ -134,10 +129,8 @@ var _ = Describe("CfService", func() {
 				cliConnection := new(pluginfakes.FakeCliConnection)
 				sshRunner := new(cfmysqlfakes.FakeSshRunner)
 				portWaiter := new(cfmysqlfakes.FakePortWaiter)
-				service := &CfServiceImpl{
-					SshRunner: sshRunner,
-					PortWaiter: portWaiter,
-				}
+
+				service := NewCfService(apiClient, sshRunner, portWaiter, mockHttp)
 
 				sshRunner.OpenSshTunnelStub = notifyWhenGoroutineCalled
 
