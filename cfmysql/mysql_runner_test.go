@@ -13,13 +13,11 @@ import (
 var _ = Describe("MysqlRunner", func() {
 	Context("RunMysql", func() {
 		var exec *cfmysqlfakes.FakeExecWrapper
-		var runner MysqlClientRunner
+		var runner MysqlRunner
 
 		BeforeEach(func() {
 			exec = new(cfmysqlfakes.FakeExecWrapper)
-			runner = MysqlClientRunner{
-				ExecWrapper: exec,
-			}
+			runner = NewMysqlRunner(exec)
 		})
 
 		Context("When mysql is not in PATH", func() {
@@ -85,13 +83,11 @@ var _ = Describe("MysqlRunner", func() {
 
 	Context("RunMysqlDump", func() {
 		var exec *cfmysqlfakes.FakeExecWrapper
-		var runner MysqlClientRunner
+		var runner MysqlRunner
 
 		BeforeEach(func() {
 			exec = new(cfmysqlfakes.FakeExecWrapper)
-			runner = MysqlClientRunner{
-				ExecWrapper: exec,
-			}
+			runner = NewMysqlRunner(exec)
 		})
 
 		Context("When mysqldump is not in PATH", func() {

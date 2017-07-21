@@ -15,12 +15,18 @@ type MysqlRunner interface {
 	RunMysqlDump(hostname string, port int, dbName string, username string, password string, args ...string) error
 }
 
-type MysqlClientRunner struct {
-	ExecWrapper ExecWrapper
+func NewMysqlRunner(execWrapper ExecWrapper) MysqlRunner {
+	return &mysqlRunner{
+		execWrapper: execWrapper,
+	}
 }
 
-func (self *MysqlClientRunner) RunMysql(hostname string, port int, dbName string, username string, password string, mysqlArgs ...string) error {
-	path, err := self.ExecWrapper.LookPath("mysql")
+type mysqlRunner struct {
+	execWrapper ExecWrapper
+}
+
+func (self *mysqlRunner) RunMysql(hostname string, port int, dbName string, username string, password string, mysqlArgs ...string) error {
+	path, err := self.execWrapper.LookPath("mysql")
 	if err != nil {
 		return errors.New("'mysql' client not found in PATH")
 	}
@@ -34,7 +40,7 @@ func (self *MysqlClientRunner) RunMysql(hostname string, port int, dbName string
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err = self.ExecWrapper.Run(cmd)
+	err = self.execWrapper.Run(cmd)
 	if err != nil {
 		return fmt.Errorf("Error running mysql client: %s", err)
 	}
@@ -42,8 +48,8 @@ func (self *MysqlClientRunner) RunMysql(hostname string, port int, dbName string
 	return nil
 }
 
-func (self *MysqlClientRunner) RunMysqlDump(hostname string, port int, dbName string, username string, password string, mysqlDumpArgs ...string) error {
-	path, err := self.ExecWrapper.LookPath("mysqldump")
+func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, username string, password string, mysqlDumpArgs ...string) error {
+	path, err := self.execWrapper.LookPath("mysqldump")
 	if err != nil {
 		return errors.New("'mysqldump' not found in PATH")
 	}
@@ -70,7 +76,7 @@ func (self *MysqlClientRunner) RunMysqlDump(hostname string, port int, dbName st
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	err = self.ExecWrapper.Run(cmd)
+	err = self.execWrapper.Run(cmd)
 	if err != nil {
 		return fmt.Errorf("Error running mysqldump: %s", err)
 	}
@@ -78,12 +84,6 @@ func (self *MysqlClientRunner) RunMysqlDump(hostname string, port int, dbName st
 	return nil
 }
 
-func (self *MysqlClientRunner) MakeMysqlCommand(hostname string, port int, dbName string, username string, password string) *exec.Cmd {
+func (self *mysqlRunner) MakeMysqlCommand(hostname string, port int, dbName string, username string, password string) *exec.Cmd {
 	return exec.Command("mysql", "-u", "username", "-p" + password, "-h", "hostname", "-P", strconv.Itoa(port), dbName)
-}
-
-func NewMysqlRunner(execWrapper ExecWrapper) MysqlRunner {
-	return &MysqlClientRunner{
-		ExecWrapper: execWrapper,
-	}
 }
