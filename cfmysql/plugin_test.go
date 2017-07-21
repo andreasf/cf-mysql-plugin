@@ -13,6 +13,19 @@ import (
 )
 
 var _ = Describe("Plugin", func() {
+	var appList []plugin_models.GetAppsModel
+
+	BeforeEach(func() {
+		appList = []plugin_models.GetAppsModel{
+			{
+				Name: "app-name-1",
+			},
+			{
+				Name: "app-name-2",
+			},
+		}
+	})
+
 	Context("When calling 'cf plugins'", func() {
 		It("Shows the mysql plugin with the current version", func() {
 			mysqlPlugin, _ := NewPluginAndMocks()
@@ -119,19 +132,11 @@ var _ = Describe("Plugin", func() {
 		})
 
 		Context("When the database is available", func() {
-			var app plugin_models.GetAppsModel
-
-			BeforeEach(func() {
-				app = plugin_models.GetAppsModel{
-					Name: "app-name",
-				}
-			})
-
 			It("Opens an SSH tunnel through a started app", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
 				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				mocks.CfService.GetStartedAppsReturns(appList, nil)
 				mocks.PortFinder.GetPortReturns(2342)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "database-a"})
@@ -141,10 +146,10 @@ var _ = Describe("Plugin", func() {
 				Expect(mocks.PortFinder.GetPortCallCount()).To(Equal(1))
 				Expect(mocks.CfService.OpenSshTunnelCallCount()).To(Equal(1))
 
-				calledCliConnection, calledService, calledAppName, localPort := mocks.CfService.OpenSshTunnelArgsForCall(0)
+				calledCliConnection, calledService, calledAppList, localPort := mocks.CfService.OpenSshTunnelArgsForCall(0)
 				Expect(calledCliConnection).To(Equal(mocks.CliConnection))
 				Expect(calledService).To(Equal(serviceA))
-				Expect(calledAppName).To(Equal("app-name"))
+				Expect(calledAppList).To(Equal(appList))
 				Expect(localPort).To(Equal(2342))
 			})
 
@@ -152,7 +157,7 @@ var _ = Describe("Plugin", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
 				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				mocks.CfService.GetStartedAppsReturns(appList, nil)
 				mocks.PortFinder.GetPortReturns(2342)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "database-a"})
@@ -173,7 +178,7 @@ var _ = Describe("Plugin", func() {
 					mysqlPlugin, mocks := NewPluginAndMocks()
 
 					mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-					mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+					mocks.CfService.GetStartedAppsReturns(appList, nil)
 					mocks.PortFinder.GetPortReturns(2342)
 
 					mysqlPlugin.Run(mocks.CliConnection, []string{"mysql", "database-a", "--foo", "bar", "--baz"})
@@ -352,11 +357,15 @@ var _ = Describe("Plugin", func() {
 		})
 
 		Context("When the database is available", func() {
-			var app plugin_models.GetAppsModel
+			var app1 plugin_models.GetAppsModel
+			var app2 plugin_models.GetAppsModel
 
 			BeforeEach(func() {
-				app = plugin_models.GetAppsModel{
-					Name: "app-name",
+				app1 = plugin_models.GetAppsModel{
+					Name: "app-name-1",
+				}
+				app2 = plugin_models.GetAppsModel{
+					Name: "app-name-2",
 				}
 			})
 
@@ -364,7 +373,7 @@ var _ = Describe("Plugin", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
 				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app1, app2}, nil)
 				mocks.PortFinder.GetPortReturns(2342)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump", "database-a"})
@@ -374,10 +383,10 @@ var _ = Describe("Plugin", func() {
 				Expect(mocks.PortFinder.GetPortCallCount()).To(Equal(1))
 				Expect(mocks.CfService.OpenSshTunnelCallCount()).To(Equal(1))
 
-				calledCliConnection, calledService, calledAppName, localPort := mocks.CfService.OpenSshTunnelArgsForCall(0)
+				calledCliConnection, calledService, calledAppList, localPort := mocks.CfService.OpenSshTunnelArgsForCall(0)
 				Expect(calledCliConnection).To(Equal(mocks.CliConnection))
 				Expect(calledService).To(Equal(serviceA))
-				Expect(calledAppName).To(Equal("app-name"))
+				Expect(calledAppList).To(Equal(appList))
 				Expect(localPort).To(Equal(2342))
 			})
 
@@ -385,7 +394,7 @@ var _ = Describe("Plugin", func() {
 				mysqlPlugin, mocks := NewPluginAndMocks()
 
 				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app}, nil)
+				mocks.CfService.GetStartedAppsReturns([]plugin_models.GetAppsModel{app1}, nil)
 				mocks.PortFinder.GetPortReturns(2342)
 
 				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump", "database-a"})

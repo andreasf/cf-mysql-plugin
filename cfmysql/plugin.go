@@ -140,7 +140,7 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 	}
 
 	tunnelPort := self.PortFinder.GetPort()
-	self.CfService.OpenSshTunnel(cliConnection, *service, appsResult.Apps[0].Name, tunnelPort)
+	self.CfService.OpenSshTunnel(cliConnection, *service, appsResult.Apps, tunnelPort)
 
 	err = self.runClient(command, "127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, mysqlArgs...)
 	if err != nil {

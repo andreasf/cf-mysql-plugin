@@ -13,15 +13,16 @@ import (
 type CfService interface {
 	GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error)
 	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
-	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int)
+	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, apps []sdkModels.GetAppsModel, localPort int)
 }
 
-func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient HttpWrapper) *cfService {
+func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient HttpWrapper, randWrapper RandWrapper) *cfService {
 	return &cfService{
-		apiClient:  apiClient,
-		sshRunner:  runner,
-		portWaiter: waiter,
-		httpClient: httpClient,
+		apiClient:   apiClient,
+		sshRunner:   runner,
+		portWaiter:  waiter,
+		httpClient:  httpClient,
+		randWrapper: randWrapper,
 	}
 }
 
@@ -36,10 +37,11 @@ type MysqlService struct {
 }
 
 type cfService struct {
-	apiClient  ApiClient
-	httpClient HttpWrapper
-	portWaiter PortWaiter
-	sshRunner  SshRunner
+	apiClient   ApiClient
+	httpClient  HttpWrapper
+	portWaiter  PortWaiter
+	sshRunner   SshRunner
+	randWrapper RandWrapper
 }
 
 type BindingResult struct {
@@ -76,7 +78,9 @@ func (self *cfService) GetStartedApps(cliConnection plugin.CliConnection) ([]sdk
 	return self.apiClient.GetStartedApps(cliConnection)
 }
 
-func (self *cfService) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, throughApp string, localPort int) {
+func (self *cfService) OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, apps []sdkModels.GetAppsModel, localPort int) {
+	throughAppIndex := self.randWrapper.Intn(len(apps))
+	throughApp := apps[throughAppIndex].Name
 	go self.sshRunner.OpenSshTunnel(cliConnection, toService, throughApp, localPort)
 
 	self.portWaiter.WaitUntilOpen(localPort)

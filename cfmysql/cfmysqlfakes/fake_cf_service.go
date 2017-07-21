@@ -36,12 +36,12 @@ type FakeCfService struct {
 		result1 []sdkModels.GetAppsModel
 		result2 error
 	}
-	OpenSshTunnelStub        func(cliConnection plugin.CliConnection, toService cfmysql.MysqlService, throughApp string, localPort int)
+	OpenSshTunnelStub        func(cliConnection plugin.CliConnection, toService cfmysql.MysqlService, apps []sdkModels.GetAppsModel, localPort int)
 	openSshTunnelMutex       sync.RWMutex
 	openSshTunnelArgsForCall []struct {
 		cliConnection plugin.CliConnection
 		toService     cfmysql.MysqlService
-		throughApp    string
+		apps          []sdkModels.GetAppsModel
 		localPort     int
 	}
 	invocations      map[string][][]interface{}
@@ -150,18 +150,23 @@ func (fake *FakeCfService) GetStartedAppsReturnsOnCall(i int, result1 []sdkModel
 	}{result1, result2}
 }
 
-func (fake *FakeCfService) OpenSshTunnel(cliConnection plugin.CliConnection, toService cfmysql.MysqlService, throughApp string, localPort int) {
+func (fake *FakeCfService) OpenSshTunnel(cliConnection plugin.CliConnection, toService cfmysql.MysqlService, apps []sdkModels.GetAppsModel, localPort int) {
+	var appsCopy []sdkModels.GetAppsModel
+	if apps != nil {
+		appsCopy = make([]sdkModels.GetAppsModel, len(apps))
+		copy(appsCopy, apps)
+	}
 	fake.openSshTunnelMutex.Lock()
 	fake.openSshTunnelArgsForCall = append(fake.openSshTunnelArgsForCall, struct {
 		cliConnection plugin.CliConnection
 		toService     cfmysql.MysqlService
-		throughApp    string
+		apps          []sdkModels.GetAppsModel
 		localPort     int
-	}{cliConnection, toService, throughApp, localPort})
-	fake.recordInvocation("OpenSshTunnel", []interface{}{cliConnection, toService, throughApp, localPort})
+	}{cliConnection, toService, appsCopy, localPort})
+	fake.recordInvocation("OpenSshTunnel", []interface{}{cliConnection, toService, appsCopy, localPort})
 	fake.openSshTunnelMutex.Unlock()
 	if fake.OpenSshTunnelStub != nil {
-		fake.OpenSshTunnelStub(cliConnection, toService, throughApp, localPort)
+		fake.OpenSshTunnelStub(cliConnection, toService, apps, localPort)
 	}
 }
 
@@ -171,10 +176,10 @@ func (fake *FakeCfService) OpenSshTunnelCallCount() int {
 	return len(fake.openSshTunnelArgsForCall)
 }
 
-func (fake *FakeCfService) OpenSshTunnelArgsForCall(i int) (plugin.CliConnection, cfmysql.MysqlService, string, int) {
+func (fake *FakeCfService) OpenSshTunnelArgsForCall(i int) (plugin.CliConnection, cfmysql.MysqlService, []sdkModels.GetAppsModel, int) {
 	fake.openSshTunnelMutex.RLock()
 	defer fake.openSshTunnelMutex.RUnlock()
-	return fake.openSshTunnelArgsForCall[i].cliConnection, fake.openSshTunnelArgsForCall[i].toService, fake.openSshTunnelArgsForCall[i].throughApp, fake.openSshTunnelArgsForCall[i].localPort
+	return fake.openSshTunnelArgsForCall[i].cliConnection, fake.openSshTunnelArgsForCall[i].toService, fake.openSshTunnelArgsForCall[i].apps, fake.openSshTunnelArgsForCall[i].localPort
 }
 
 func (fake *FakeCfService) Invocations() map[string][][]interface{} {
