@@ -16,7 +16,7 @@ type MysqlRunner interface {
 }
 
 type MysqlClientRunner struct {
-	ExecWrapper Exec
+	ExecWrapper ExecWrapper
 }
 
 func (self *MysqlClientRunner) RunMysql(hostname string, port int, dbName string, username string, password string, mysqlArgs ...string) error {
@@ -82,7 +82,7 @@ func (self *MysqlClientRunner) MakeMysqlCommand(hostname string, port int, dbNam
 	return exec.Command("mysql", "-u", "username", "-p" + password, "-h", "hostname", "-P", strconv.Itoa(port), dbName)
 }
 
-func NewMysqlRunner(execWrapper Exec) MysqlRunner {
+func NewMysqlRunner(execWrapper ExecWrapper) MysqlRunner {
 	return &MysqlClientRunner{
 		ExecWrapper: execWrapper,
 	}

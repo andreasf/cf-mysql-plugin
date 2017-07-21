@@ -32,7 +32,7 @@ func newPlugin() *cfmysql.MysqlPlugin {
 	waiter := cfmysql.NewPortWaiter(netWrapper)
 	cfService := cfmysql.NewCfService(apiClient, sshRunner, waiter, http)
 
-	execWrapper := new(cfmysql.ExecWrapper)
+	execWrapper := cfmysql.NewExecWrapper()
 	runner := cfmysql.NewMysqlRunner(execWrapper)
 
 	portFinder := new(cfmysql.FreePortFinder)

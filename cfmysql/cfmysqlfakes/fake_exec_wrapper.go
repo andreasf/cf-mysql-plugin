@@ -8,7 +8,7 @@ import (
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 )
 
-type FakeExec struct {
+type FakeExecWrapper struct {
 	LookPathStub        func(file string) (string, error)
 	lookPathMutex       sync.RWMutex
 	lookPathArgsForCall []struct {
@@ -37,7 +37,7 @@ type FakeExec struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeExec) LookPath(file string) (string, error) {
+func (fake *FakeExecWrapper) LookPath(file string) (string, error) {
 	fake.lookPathMutex.Lock()
 	ret, specificReturn := fake.lookPathReturnsOnCall[len(fake.lookPathArgsForCall)]
 	fake.lookPathArgsForCall = append(fake.lookPathArgsForCall, struct {
@@ -54,19 +54,19 @@ func (fake *FakeExec) LookPath(file string) (string, error) {
 	return fake.lookPathReturns.result1, fake.lookPathReturns.result2
 }
 
-func (fake *FakeExec) LookPathCallCount() int {
+func (fake *FakeExecWrapper) LookPathCallCount() int {
 	fake.lookPathMutex.RLock()
 	defer fake.lookPathMutex.RUnlock()
 	return len(fake.lookPathArgsForCall)
 }
 
-func (fake *FakeExec) LookPathArgsForCall(i int) string {
+func (fake *FakeExecWrapper) LookPathArgsForCall(i int) string {
 	fake.lookPathMutex.RLock()
 	defer fake.lookPathMutex.RUnlock()
 	return fake.lookPathArgsForCall[i].file
 }
 
-func (fake *FakeExec) LookPathReturns(result1 string, result2 error) {
+func (fake *FakeExecWrapper) LookPathReturns(result1 string, result2 error) {
 	fake.LookPathStub = nil
 	fake.lookPathReturns = struct {
 		result1 string
@@ -74,7 +74,7 @@ func (fake *FakeExec) LookPathReturns(result1 string, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeExec) LookPathReturnsOnCall(i int, result1 string, result2 error) {
+func (fake *FakeExecWrapper) LookPathReturnsOnCall(i int, result1 string, result2 error) {
 	fake.LookPathStub = nil
 	if fake.lookPathReturnsOnCall == nil {
 		fake.lookPathReturnsOnCall = make(map[int]struct {
@@ -88,7 +88,7 @@ func (fake *FakeExec) LookPathReturnsOnCall(i int, result1 string, result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeExec) Run(arg1 *exec.Cmd) error {
+func (fake *FakeExecWrapper) Run(arg1 *exec.Cmd) error {
 	fake.runMutex.Lock()
 	ret, specificReturn := fake.runReturnsOnCall[len(fake.runArgsForCall)]
 	fake.runArgsForCall = append(fake.runArgsForCall, struct {
@@ -105,26 +105,26 @@ func (fake *FakeExec) Run(arg1 *exec.Cmd) error {
 	return fake.runReturns.result1
 }
 
-func (fake *FakeExec) RunCallCount() int {
+func (fake *FakeExecWrapper) RunCallCount() int {
 	fake.runMutex.RLock()
 	defer fake.runMutex.RUnlock()
 	return len(fake.runArgsForCall)
 }
 
-func (fake *FakeExec) RunArgsForCall(i int) *exec.Cmd {
+func (fake *FakeExecWrapper) RunArgsForCall(i int) *exec.Cmd {
 	fake.runMutex.RLock()
 	defer fake.runMutex.RUnlock()
 	return fake.runArgsForCall[i].arg1
 }
 
-func (fake *FakeExec) RunReturns(result1 error) {
+func (fake *FakeExecWrapper) RunReturns(result1 error) {
 	fake.RunStub = nil
 	fake.runReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeExec) RunReturnsOnCall(i int, result1 error) {
+func (fake *FakeExecWrapper) RunReturnsOnCall(i int, result1 error) {
 	fake.RunStub = nil
 	if fake.runReturnsOnCall == nil {
 		fake.runReturnsOnCall = make(map[int]struct {
@@ -136,7 +136,7 @@ func (fake *FakeExec) RunReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeExec) Invocations() map[string][][]interface{} {
+func (fake *FakeExecWrapper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.lookPathMutex.RLock()
@@ -150,7 +150,7 @@ func (fake *FakeExec) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeExec) recordInvocation(key string, args []interface{}) {
+func (fake *FakeExecWrapper) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -162,4 +162,4 @@ func (fake *FakeExec) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ cfmysql.Exec = new(FakeExec)
+var _ cfmysql.ExecWrapper = new(FakeExecWrapper)

@@ -12,11 +12,11 @@ import (
 
 var _ = Describe("MysqlRunner", func() {
 	Context("RunMysql", func() {
-		var exec *cfmysqlfakes.FakeExec
+		var exec *cfmysqlfakes.FakeExecWrapper
 		var runner MysqlClientRunner
 
 		BeforeEach(func() {
-			exec = new(cfmysqlfakes.FakeExec)
+			exec = new(cfmysqlfakes.FakeExecWrapper)
 			runner = MysqlClientRunner{
 				ExecWrapper: exec,
 			}
@@ -84,11 +84,11 @@ var _ = Describe("MysqlRunner", func() {
 	})
 
 	Context("RunMysqlDump", func() {
-		var exec *cfmysqlfakes.FakeExec
+		var exec *cfmysqlfakes.FakeExecWrapper
 		var runner MysqlClientRunner
 
 		BeforeEach(func() {
-			exec = new(cfmysqlfakes.FakeExec)
+			exec = new(cfmysqlfakes.FakeExecWrapper)
 			runner = MysqlClientRunner{
 				ExecWrapper: exec,
 			}

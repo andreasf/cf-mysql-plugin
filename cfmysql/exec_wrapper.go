@@ -2,18 +2,22 @@ package cfmysql
 
 import "os/exec"
 
-//go:generate counterfeiter . Exec
-type Exec interface {
+//go:generate counterfeiter . ExecWrapper
+type ExecWrapper interface {
 	LookPath(file string) (string, error)
 	Run(*exec.Cmd) error
 }
 
-type ExecWrapper struct{}
+type execWrapper struct{}
 
-func (self *ExecWrapper) LookPath(file string) (string, error) {
+func NewExecWrapper() ExecWrapper {
+	return new(execWrapper)
+}
+
+func (self *execWrapper) LookPath(file string) (string, error) {
 	return exec.LookPath(file)
 }
 
-func (self *ExecWrapper) Run(cmd *exec.Cmd) error {
+func (self *execWrapper) Run(cmd *exec.Cmd) error {
 	return cmd.Run()
 }
