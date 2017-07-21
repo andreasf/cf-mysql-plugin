@@ -7,8 +7,12 @@ type PortFinder interface {
 	GetPort() int
 }
 
-type FreePortFinder struct {}
+func NewPortFinder() PortFinder {
+	return new(portFinder)
+}
 
-func (self *FreePortFinder) GetPort() int {
+type portFinder struct {}
+
+func (self *portFinder) GetPort() int {
 	return freeport.GetPort()
 }

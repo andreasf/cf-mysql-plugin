@@ -35,7 +35,7 @@ func newPlugin() *cfmysql.MysqlPlugin {
 	execWrapper := cfmysql.NewExecWrapper()
 	runner := cfmysql.NewMysqlRunner(execWrapper)
 
-	portFinder := new(cfmysql.FreePortFinder)
+	portFinder := cfmysql.NewPortFinder()
 
 	return cfmysql.NewPlugin(cfmysql.PluginConf{
 		In:          os.Stdin,
