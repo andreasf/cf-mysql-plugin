@@ -8,7 +8,7 @@ import (
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 )
 
-type FakeNet struct {
+type FakeNetWrapper struct {
 	DialStub        func(network, address string) (net.Conn, error)
 	dialMutex       sync.RWMutex
 	dialArgsForCall []struct {
@@ -38,7 +38,7 @@ type FakeNet struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeNet) Dial(network string, address string) (net.Conn, error) {
+func (fake *FakeNetWrapper) Dial(network string, address string) (net.Conn, error) {
 	fake.dialMutex.Lock()
 	ret, specificReturn := fake.dialReturnsOnCall[len(fake.dialArgsForCall)]
 	fake.dialArgsForCall = append(fake.dialArgsForCall, struct {
@@ -56,19 +56,19 @@ func (fake *FakeNet) Dial(network string, address string) (net.Conn, error) {
 	return fake.dialReturns.result1, fake.dialReturns.result2
 }
 
-func (fake *FakeNet) DialCallCount() int {
+func (fake *FakeNetWrapper) DialCallCount() int {
 	fake.dialMutex.RLock()
 	defer fake.dialMutex.RUnlock()
 	return len(fake.dialArgsForCall)
 }
 
-func (fake *FakeNet) DialArgsForCall(i int) (string, string) {
+func (fake *FakeNetWrapper) DialArgsForCall(i int) (string, string) {
 	fake.dialMutex.RLock()
 	defer fake.dialMutex.RUnlock()
 	return fake.dialArgsForCall[i].network, fake.dialArgsForCall[i].address
 }
 
-func (fake *FakeNet) DialReturns(result1 net.Conn, result2 error) {
+func (fake *FakeNetWrapper) DialReturns(result1 net.Conn, result2 error) {
 	fake.DialStub = nil
 	fake.dialReturns = struct {
 		result1 net.Conn
@@ -76,7 +76,7 @@ func (fake *FakeNet) DialReturns(result1 net.Conn, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeNet) DialReturnsOnCall(i int, result1 net.Conn, result2 error) {
+func (fake *FakeNetWrapper) DialReturnsOnCall(i int, result1 net.Conn, result2 error) {
 	fake.DialStub = nil
 	if fake.dialReturnsOnCall == nil {
 		fake.dialReturnsOnCall = make(map[int]struct {
@@ -90,7 +90,7 @@ func (fake *FakeNet) DialReturnsOnCall(i int, result1 net.Conn, result2 error) {
 	}{result1, result2}
 }
 
-func (fake *FakeNet) Close(conn net.Conn) error {
+func (fake *FakeNetWrapper) Close(conn net.Conn) error {
 	fake.closeMutex.Lock()
 	ret, specificReturn := fake.closeReturnsOnCall[len(fake.closeArgsForCall)]
 	fake.closeArgsForCall = append(fake.closeArgsForCall, struct {
@@ -107,26 +107,26 @@ func (fake *FakeNet) Close(conn net.Conn) error {
 	return fake.closeReturns.result1
 }
 
-func (fake *FakeNet) CloseCallCount() int {
+func (fake *FakeNetWrapper) CloseCallCount() int {
 	fake.closeMutex.RLock()
 	defer fake.closeMutex.RUnlock()
 	return len(fake.closeArgsForCall)
 }
 
-func (fake *FakeNet) CloseArgsForCall(i int) net.Conn {
+func (fake *FakeNetWrapper) CloseArgsForCall(i int) net.Conn {
 	fake.closeMutex.RLock()
 	defer fake.closeMutex.RUnlock()
 	return fake.closeArgsForCall[i].conn
 }
 
-func (fake *FakeNet) CloseReturns(result1 error) {
+func (fake *FakeNetWrapper) CloseReturns(result1 error) {
 	fake.CloseStub = nil
 	fake.closeReturns = struct {
 		result1 error
 	}{result1}
 }
 
-func (fake *FakeNet) CloseReturnsOnCall(i int, result1 error) {
+func (fake *FakeNetWrapper) CloseReturnsOnCall(i int, result1 error) {
 	fake.CloseStub = nil
 	if fake.closeReturnsOnCall == nil {
 		fake.closeReturnsOnCall = make(map[int]struct {
@@ -138,7 +138,7 @@ func (fake *FakeNet) CloseReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeNet) Invocations() map[string][][]interface{} {
+func (fake *FakeNetWrapper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.dialMutex.RLock()
@@ -152,7 +152,7 @@ func (fake *FakeNet) Invocations() map[string][][]interface{} {
 	return copiedInvocations
 }
 
-func (fake *FakeNet) recordInvocation(key string, args []interface{}) {
+func (fake *FakeNetWrapper) recordInvocation(key string, args []interface{}) {
 	fake.invocationsMutex.Lock()
 	defer fake.invocationsMutex.Unlock()
 	if fake.invocations == nil {
@@ -164,4 +164,4 @@ func (fake *FakeNet) recordInvocation(key string, args []interface{}) {
 	fake.invocations[key] = append(fake.invocations[key], args)
 }
 
-var _ cfmysql.Net = new(FakeNet)
+var _ cfmysql.NetWrapper = new(FakeNetWrapper)

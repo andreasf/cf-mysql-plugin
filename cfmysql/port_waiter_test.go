@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("PortWaiter", func() {
-	var netWrapper *cfmysqlfakes.FakeNet
+	var netWrapper *cfmysqlfakes.FakeNetWrapper
 	var portWaiter *TcpPortWaiter
 
 	const SUCCEED_AFTER_TRIES = 5
@@ -27,7 +27,7 @@ var _ = Describe("PortWaiter", func() {
 	}
 
 	BeforeEach(func() {
-		netWrapper = new(cfmysqlfakes.FakeNet)
+		netWrapper = new(cfmysqlfakes.FakeNetWrapper)
 		portWaiter = &TcpPortWaiter{
 			NetWrapper: netWrapper,
 		}

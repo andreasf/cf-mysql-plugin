@@ -2,18 +2,22 @@ package cfmysql
 
 import "net"
 
-//go:generate counterfeiter . Net
-type Net interface {
+//go:generate counterfeiter . NetWrapper
+type NetWrapper interface {
 	Dial(network, address string) (net.Conn, error)
 	Close(conn net.Conn) error
 }
 
-type NetWrapper struct {}
+func NewNetWrapper() NetWrapper {
+	return new(netWrapper)
+}
 
-func (self *NetWrapper) Dial(network, address string) (net.Conn, error) {
+type netWrapper struct {}
+
+func (self *netWrapper) Dial(network, address string) (net.Conn, error) {
 	return net.Dial(network, address)
 }
 
-func (self *NetWrapper) Close(conn net.Conn) error {
+func (self *netWrapper) Close(conn net.Conn) error {
 	return conn.Close()
 }

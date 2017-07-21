@@ -15,7 +15,7 @@ type PortWaiter interface {
 const SLEEP_TIME = 100
 
 type TcpPortWaiter struct {
-	NetWrapper Net
+	NetWrapper NetWrapper
 }
 
 func (self *TcpPortWaiter) WaitUntilOpen(localPort int) {
@@ -30,7 +30,7 @@ func (self *TcpPortWaiter) WaitUntilOpen(localPort int) {
 	self.NetWrapper.Close(conn)
 }
 
-func NewPortWaiter(netWrapper Net) PortWaiter {
+func NewPortWaiter(netWrapper NetWrapper) PortWaiter {
 	return &TcpPortWaiter{
 		NetWrapper: netWrapper,
 	}
