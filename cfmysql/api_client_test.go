@@ -16,7 +16,7 @@ import (
 
 var _ = Describe("ApiClient", func() {
 	var cliConnection *pluginfakes.FakeCliConnection
-	var apiClient *ApiClientImpl
+	var apiClient ApiClient
 	var mockHttp *cfmysqlfakes.FakeHttp
 
 	BeforeEach(func() {
@@ -37,9 +37,7 @@ var _ = Describe("ApiClient", func() {
 			}
 		}
 
-		apiClient = &ApiClientImpl{
-			HttpClient: mockHttp,
-		}
+		apiClient = NewApiClient(mockHttp)
 	})
 
 	Describe("GetStartedApps", func() {

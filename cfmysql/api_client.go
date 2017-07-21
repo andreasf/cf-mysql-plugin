@@ -17,11 +17,11 @@ type ApiClient interface {
 	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
 }
 
-type ApiClientImpl struct {
-	HttpClient Http
+type apiClient struct {
+	httpClient Http
 }
 
-func (self *ApiClientImpl) GetServiceInstances(cliConnection plugin.CliConnection) ([]pluginModels.ServiceInstance, error) {
+func (self *apiClient) GetServiceInstances(cliConnection plugin.CliConnection) ([]pluginModels.ServiceInstance, error) {
 	var err error
 	var allInstances []pluginModels.ServiceInstance
 	nextUrl := "/v2/service_instances"
@@ -40,7 +40,7 @@ func (self *ApiClientImpl) GetServiceInstances(cliConnection plugin.CliConnectio
 	return allInstances, err
 }
 
-func (self *ApiClientImpl) getFromCfApi(path string, cliConnection plugin.CliConnection) ([]byte, error) {
+func (self *apiClient) getFromCfApi(path string, cliConnection plugin.CliConnection) ([]byte, error) {
 	endpoint, err := cliConnection.ApiEndpoint()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get API endpoint: %s", err)
@@ -55,7 +55,7 @@ func (self *ApiClientImpl) getFromCfApi(path string, cliConnection plugin.CliCon
 	if err != nil {
 		return nil, fmt.Errorf("Unable to check SSL status: %s", err)
 	}
-	return self.HttpClient.Get(endpoint+path, accessToken, sslDisabled)
+	return self.httpClient.Get(endpoint+path, accessToken, sslDisabled)
 }
 
 func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceInstance, error) {
@@ -69,7 +69,7 @@ func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceIn
 	return paginatedResources.NextUrl, paginatedResources.ToModel(), nil
 }
 
-func (self *ApiClientImpl) GetServiceBindings(cliConnection plugin.CliConnection) ([]pluginModels.ServiceBinding, error) {
+func (self *apiClient) GetServiceBindings(cliConnection plugin.CliConnection) ([]pluginModels.ServiceBinding, error) {
 	var allBindings []pluginModels.ServiceBinding
 	nextUrl := "/v2/service_bindings"
 
@@ -103,7 +103,7 @@ func deserializeBindings(bindingResponse []byte) (string, []pluginModels.Service
 	return paginatedResources.NextUrl, bindings, err
 }
 
-func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
+func (self *apiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
 	apps, err := cliConnection.GetApps()
 	if err != nil {
 		return nil, fmt.Errorf("Unable to retrieve apps: %s", err)
@@ -120,8 +120,8 @@ func (self *ApiClientImpl) GetStartedApps(cliConnection plugin.CliConnection) ([
 	return startedApps, nil
 }
 
-func NewApiClient(httpClient Http) *ApiClientImpl {
-	return &ApiClientImpl{
-		HttpClient: httpClient,
+func NewApiClient(httpClient Http) *apiClient {
+	return &apiClient{
+		httpClient: httpClient,
 	}
 }
