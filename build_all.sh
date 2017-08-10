@@ -25,7 +25,7 @@ build_for_platform_and_arch() {
     mkdir -p output
     build_filename=`build_filename_for_platform "$platform"`
     release_name="output/`release_name_for_platform $platform $arch`"
-    GOOS="$platform" GOARCH="$arch" go build
+    GODEBUG=netdns=cgo GOOS="$platform" GOARCH="$arch" go build
     mv "$build_filename" "$release_name"
 
     hash_val=`shasum ${release_name} | cut -f 1 -d" "`
