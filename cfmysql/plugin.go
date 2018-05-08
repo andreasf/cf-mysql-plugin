@@ -32,8 +32,8 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 	return plugin.PluginMetadata{
 		Name: "mysql",
 		Version: plugin.VersionType{
-			Major: 1,
-			Minor: 4,
+			Major: 2,
+			Minor: 0,
 			Build: 0,
 		},
 		MinCliVersion: plugin.VersionType{
@@ -46,9 +46,7 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 				Name:     "mysql",
 				HelpText: "Connect to a MySQL database service",
 				UsageDetails: plugin.Usage{
-					Usage: "Get a list of available databases:\n   " +
-						"cf mysql\n\n   " +
-						"Open a mysql client to a database:\n   " +
+					Usage: "Open a mysql client to a database:\n   " +
 						"cf mysql <service-name> [mysql args...]",
 				},
 			},
@@ -56,11 +54,9 @@ func (self *MysqlPlugin) GetMetadata() plugin.PluginMetadata {
 				Name:     "mysqldump",
 				HelpText: "Dump a MySQL database",
 				UsageDetails: plugin.Usage{
-					Usage: "Get a list of available databases:\n   " +
-						"cf mysqldump\n\n   " +
-						"Dumping all tables in a database:\n   " +
-						"cf mysqldump <service-name> [mysqldump args...]\n\n   " +
-						"Dumping specific tables in a database:\n   " +
+					Usage: "Dump all tables in a database:\n   " +
+						"cf mysqldump <service-name> [mysqldump args...]\n   " +
+						"Dump specific tables in a database:\n   " +
 						"cf mysqldump <service-name> [tables...] [mysqldump args...]",
 				},
 			},
@@ -79,16 +75,38 @@ func (self *MysqlPlugin) Run(cliConnection plugin.CliConnection, args []string) 
 		if len(args) > 1 {
 			dbName := args[1]
 
-			mysqlArgs := []string{}
+			var mysqlArgs []string
 			if len(args) > 2 {
 				mysqlArgs = args[2:]
 			}
 
 			self.connectTo(cliConnection, command, dbName, mysqlArgs)
 		} else {
-			self.showServices(cliConnection, command)
+			fmt.Fprint(self.Err, self.FormatUsage())
+			self.setErrorExit()
 		}
+
+	default:
+		// we don't handle "uninstall"
 	}
+}
+
+func (self *MysqlPlugin) FormatUsage() string {
+	var usage string
+	for i, command := range self.GetMetadata().Commands {
+		if i > 0 {
+			usage += "\n\n"
+		}
+
+		usage += fmt.Sprintf(
+			"cf %s - %s\n\nUSAGE:\n   %s\n",
+			command.Name,
+			command.HelpText,
+			command.UsageDetails.Usage,
+		)
+	}
+
+	return usage
 }
 
 func (self *MysqlPlugin) GetExitCode() int {
@@ -101,7 +119,7 @@ func (self *MysqlPlugin) setErrorExit() {
 
 type StartedAppsResult struct {
 	Apps []plugin_models.GetAppsModel
-	Err error
+	Err  error
 }
 
 func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command string, dbName string, mysqlArgs []string) {
@@ -120,13 +138,13 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 
 	service, serviceFound := getServiceByName(services, dbName)
 	if !serviceFound {
-		fmt.Fprintf(self.Err, "FAILED\nService '%s' is not bound to an app, not a MySQL database or does not exist in the " +
+		fmt.Fprintf(self.Err, "FAILED\nService '%s' is not bound to an app, not a MySQL database or does not exist in the "+
 			"current space.\n", dbName)
 		self.setErrorExit()
 		return
 	}
 
-	appsResult := <- appsChan
+	appsResult := <-appsChan
 	if appsResult.Err != nil {
 		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve started apps: %s\n", appsResult.Err)
 		self.setErrorExit()
@@ -168,25 +186,6 @@ func (self *MysqlPlugin) runClient(command string, hostname string, port int, db
 	}
 
 	panic(fmt.Errorf("Command not implemented: %s", command))
-}
-
-func (self *MysqlPlugin) showServices(cliConnection plugin.CliConnection, command string) {
-	services, err := self.CfService.GetMysqlServices(cliConnection)
-	if err != nil {
-		fmt.Fprintf(self.Err, "Unable to retrieve services: %s\n", err)
-		self.setErrorExit()
-		return
-	}
-
-	if len(services) > 0 {
-		fmt.Fprintln(self.Out, "MySQL databases bound to an app:\n")
-		for _, service := range (services) {
-			fmt.Fprintf(self.Out, "%s\n", service.Name)
-		}
-	} else {
-		fmt.Fprintf(self.Err, "No MySQL databases available. Please bind your database services to " +
-			"a started app to make them available to 'cf %s'.\n", command)
-	}
 }
 
 type PluginConf struct {

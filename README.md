@@ -25,9 +25,6 @@ NAME:
    mysql - Connect to a MySQL database service
 
 USAGE:
-   Get a list of available databases:
-   cf mysql
-
    Open a mysql client to a database:
    cf mysql <service-name> [mysql args...]
 
@@ -46,20 +43,6 @@ USAGE:
    Dumping specific tables in a database:
    cf mysqldump <service-name> [tables...] [mysqldump args...]
 ```
-
-### Getting a list of available databases
-
-Running the plugin without arguments should give a list of available MySQL databases:
-
-```bash
-$ cf mysql
-MySQL databases bound to an app:
-
-my-db
-```
-
-Databases are *available* if they are bound to a running app - see below for an explanation why.
-
 
 ### Connecting to a database
 

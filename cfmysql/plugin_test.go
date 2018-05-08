@@ -14,6 +14,7 @@ import (
 
 var _ = Describe("Plugin", func() {
 	var appList []plugin_models.GetAppsModel
+	usage := "cf mysql - Connect to a MySQL database service\n\nUSAGE:\n   Open a mysql client to a database:\n   cf mysql <service-name> [mysql args...]\n\n\ncf mysqldump - Dump a MySQL database\n\nUSAGE:\n   Dump all tables in a database:\n   cf mysqldump <service-name> [mysqldump args...]\n   Dump specific tables in a database:\n   cf mysqldump <service-name> [tables...] [mysqldump args...]\n"
 
 	BeforeEach(func() {
 		appList = []plugin_models.GetAppsModel{
@@ -32,8 +33,8 @@ var _ = Describe("Plugin", func() {
 
 			Expect(mysqlPlugin.GetMetadata().Name).To(Equal("mysql"))
 			Expect(mysqlPlugin.GetMetadata().Version).To(Equal(plugin.VersionType{
-				Major: 1,
-				Minor: 4,
+				Major: 2,
+				Minor: 0,
 				Build: 0,
 			}))
 		})
@@ -49,65 +50,14 @@ var _ = Describe("Plugin", func() {
 	})
 
 	Context("When calling 'cf mysql' without arguments", func() {
-		Context("With databases available", func() {
-			var serviceA, serviceB MysqlService
+		It("Prints usage instructions to STDERR and exits with 1", func() {
+			mysqlPlugin, mocks := NewPluginAndMocks()
 
-			BeforeEach(func() {
-				serviceA = MysqlService{
-					Name:     "database-a",
-					Hostname: "database-a.host",
-					Port:     "123",
-					DbName:   "dbname-a",
-				}
-				serviceB = MysqlService{
-					Name:     "database-b",
-					Hostname: "database-b.host",
-					Port:     "234",
-					DbName:   "dbname-b",
-				}
-			})
+			mysqlPlugin.Run(mocks.CliConnection, []string{"mysql"})
 
-			It("Lists the available MySQL databases", func() {
-				mysqlPlugin, mocks := NewPluginAndMocks()
-				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-
-				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql"})
-
-				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.Out).To(gbytes.Say("MySQL databases bound to an app:\n\ndatabase-a\ndatabase-b\n"))
-				Expect(mocks.In).To(gbytes.Say(""))
-				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
-			})
-		})
-
-		Context("With no databases available", func() {
-			It("Tells the user that databases must be bound to a started app", func() {
-				mysqlPlugin, mocks := NewPluginAndMocks()
-
-				mocks.CfService.GetMysqlServicesReturns([]MysqlService{}, nil)
-
-				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql"})
-
-				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.Out).To(gbytes.Say(""))
-				Expect(mocks.Err).To(gbytes.Say("No MySQL databases available. Please bind your database services to a started app to make them available to 'cf mysql'."))
-				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
-			})
-		})
-
-		Context("With failing API calls", func() {
-			It("Shows an error message", func() {
-				mysqlPlugin, mocks := NewPluginAndMocks()
-
-				mocks.CfService.GetMysqlServicesReturns(nil, fmt.Errorf("foo"))
-
-				mysqlPlugin.Run(mocks.CliConnection, []string{"mysql"})
-
-				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.Out).To(gbytes.Say(""))
-				Expect(mocks.Err).To(gbytes.Say("Unable to retrieve services: foo\n"))
-				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
-			})
+			Expect(mocks.Out).To(gbytes.Say(""))
+			Expect(string(mocks.Err.Contents())).To(Equal(usage))
+			Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
 		})
 	})
 
@@ -273,66 +223,14 @@ var _ = Describe("Plugin", func() {
 	})
 
 	Context("When calling 'cf mysqldump' without arguments", func() {
-		Context("With databases available", func() {
-			var serviceA, serviceB MysqlService
+		It("Prints usage information to STDERR and exits with 1", func() {
+			mysqlPlugin, mocks := NewPluginAndMocks()
 
-			BeforeEach(func() {
-				serviceA = MysqlService{
-					Name:     "database-a",
-					Hostname: "database-a.host",
-					Port:     "123",
-					DbName:   "dbname-a",
-				}
-				serviceB = MysqlService{
-					Name:     "database-b",
-					Hostname: "database-b.host",
-					Port:     "234",
-					DbName:   "dbname-b",
-				}
-			})
+			mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump"})
 
-			It("Lists the available MySQL databases", func() {
-				mysqlPlugin, mocks := NewPluginAndMocks()
-
-				mocks.CfService.GetMysqlServicesReturns([]MysqlService{serviceA, serviceB}, nil)
-
-				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump"})
-
-				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.Out).To(gbytes.Say("MySQL databases bound to an app:\n\ndatabase-a\ndatabase-b\n"))
-				Expect(mocks.Err).To(gbytes.Say(""))
-				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
-			})
-		})
-
-		Context("With no databases available", func() {
-			It("Tells the user that databases must be bound to a started app", func() {
-				mysqlPlugin, mocks := NewPluginAndMocks()
-
-				mocks.CfService.GetMysqlServicesReturns([]MysqlService{}, nil)
-
-				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump"})
-
-				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.Out).To(gbytes.Say(""))
-				Expect(mocks.Err).To(gbytes.Say("No MySQL databases available. Please bind your database services to a started app to make them available to 'cf mysqldump'."))
-				Expect(mysqlPlugin.GetExitCode()).To(Equal(0))
-			})
-		})
-
-		Context("With failing API calls", func() {
-			It("Shows an error message", func() {
-				mysqlPlugin, mocks := NewPluginAndMocks()
-
-				mocks.CfService.GetMysqlServicesReturns(nil, fmt.Errorf("foo"))
-
-				mysqlPlugin.Run(mocks.CliConnection, []string{"mysqldump"})
-
-				Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(1))
-				Expect(mocks.Out).To(gbytes.Say(""))
-				Expect(mocks.Err).To(gbytes.Say("Unable to retrieve services: foo\n"))
-				Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
-			})
+			Expect(mocks.Out).To(gbytes.Say(""))
+			Expect(string(mocks.Err.Contents())).To(Equal(usage))
+			Expect(mysqlPlugin.GetExitCode()).To(Equal(1))
 		})
 	})
 
