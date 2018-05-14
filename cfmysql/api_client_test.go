@@ -89,7 +89,7 @@ var _ = Describe("ApiClient", func() {
 
 				_, err := apiClient.GetStartedApps(cliConnection)
 
-				Expect(err).To(Equal(errors.New("Unable to retrieve apps: PC LOAD LETTER")))
+				Expect(err).To(Equal(errors.New("unable to retrieve apps: PC LOAD LETTER")))
 			})
 		})
 	})

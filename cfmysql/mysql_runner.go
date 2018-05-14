@@ -42,7 +42,7 @@ func (self *mysqlRunner) RunMysql(hostname string, port int, dbName string, user
 
 	err = self.execWrapper.Run(cmd)
 	if err != nil {
-		return fmt.Errorf("Error running mysql client: %s", err)
+		return fmt.Errorf("error running mysql client: %s", err)
 	}
 
 	return nil
@@ -78,7 +78,7 @@ func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, 
 
 	err = self.execWrapper.Run(cmd)
 	if err != nil {
-		return fmt.Errorf("Error running mysqldump: %s", err)
+		return fmt.Errorf("error running mysqldump: %s", err)
 	}
 
 	return nil

@@ -106,7 +106,7 @@ func (self *apiClient) CreateServiceKey(cliConnection plugin.CliConnection, serv
 func (self *apiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
 	apps, err := cliConnection.GetApps()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to retrieve apps: %s", err)
+		return nil, fmt.Errorf("unable to retrieve apps: %s", err)
 	}
 
 	startedApps := make([]sdkModels.GetAppsModel, 0, len(apps))
@@ -123,17 +123,17 @@ func (self *apiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]sdk
 func (self *apiClient) getFromCfApi(path string, cliConnection plugin.CliConnection) ([]byte, error) {
 	endpoint, err := cliConnection.ApiEndpoint()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get API endpoint: %s", err)
+		return nil, fmt.Errorf("unable to get API endpoint: %s", err)
 	}
 
 	accessToken, err := cliConnection.AccessToken()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get access token: %s", err)
+		return nil, fmt.Errorf("unable to get access token: %s", err)
 	}
 
 	sslDisabled, err := cliConnection.IsSSLDisabled()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to check SSL status: %s", err)
+		return nil, fmt.Errorf("unable to check SSL status: %s", err)
 	}
 
 	return self.httpClient.Get(endpoint+path, accessToken, sslDisabled)
@@ -142,17 +142,17 @@ func (self *apiClient) getFromCfApi(path string, cliConnection plugin.CliConnect
 func (self *apiClient) postToCfApi(path string, body io.Reader, cliConnection plugin.CliConnection) ([]byte, error) {
 	endpoint, err := cliConnection.ApiEndpoint()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get API endpoint: %s", err)
+		return nil, fmt.Errorf("unable to get API endpoint: %s", err)
 	}
 
 	accessToken, err := cliConnection.AccessToken()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to get access token: %s", err)
+		return nil, fmt.Errorf("unable to get access token: %s", err)
 	}
 
 	sslDisabled, err := cliConnection.IsSSLDisabled()
 	if err != nil {
-		return nil, fmt.Errorf("Unable to check SSL status: %s", err)
+		return nil, fmt.Errorf("unable to check SSL status: %s", err)
 	}
 
 	return self.httpClient.Post(endpoint+path, body, accessToken, sslDisabled)
@@ -163,7 +163,7 @@ func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceIn
 	err := json.Unmarshal(jsonResponse, paginatedResources)
 
 	if err != nil {
-		return "", nil, fmt.Errorf("Unable to deserialize service instances: %s", err)
+		return "", nil, fmt.Errorf("unable to deserialize service instances: %s", err)
 	}
 
 	return paginatedResources.NextUrl, paginatedResources.ToModel(), nil

@@ -168,7 +168,7 @@ func (self *MysqlPlugin) runClient(command string, hostname string, port int, db
 		return self.MysqlRunner.RunMysqlDump(hostname, port, dbName, username, password, args...)
 	}
 
-	panic(fmt.Errorf("Command not implemented: %s", command))
+	panic(fmt.Errorf("command not implemented: %s", command))
 }
 
 type PluginConf struct {

@@ -38,7 +38,7 @@ var _ = Describe("MysqlRunner", func() {
 
 				err := runner.RunMysql("hostname", 42, "dbname", "username", "password")
 
-				Expect(err).To(Equal(errors.New("Error running mysql client: PC LOAD LETTER")))
+				Expect(err).To(Equal(errors.New("error running mysql client: PC LOAD LETTER")))
 			})
 		})
 
@@ -108,7 +108,7 @@ var _ = Describe("MysqlRunner", func() {
 
 				err := runner.RunMysqlDump("hostname", 42, "dbname", "username", "password")
 
-				Expect(err).To(Equal(errors.New("Error running mysqldump: PC LOAD LETTER")))
+				Expect(err).To(Equal(errors.New("error running mysqldump: PC LOAD LETTER")))
 			})
 		})
 
