@@ -294,7 +294,6 @@ var _ = Describe("Plugin", func() {
 
 			mysqlPlugin.Run(mocks.CliConnection, []string{"CLI-MESSAGE-UNINSTALL"})
 
-			Expect(mocks.CfService.GetMysqlServicesCallCount()).To(Equal(0))
 			Expect(mocks.Out).To(gbytes.Say("^$"))
 			Expect(mocks.Err).To(gbytes.Say("^$"))
 			Expect(mysqlPlugin.GetExitCode()).To(Equal(0))

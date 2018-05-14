@@ -9,12 +9,12 @@ import (
 )
 
 type FakeHttpWrapper struct {
-	GetStub        func(endpoint string, access_token string, skipSsl bool) ([]byte, error)
+	GetStub        func(endpoint string, accessToken string, skipSsl bool) ([]byte, error)
 	getMutex       sync.RWMutex
 	getArgsForCall []struct {
-		endpoint     string
-		access_token string
-		skipSsl      bool
+		endpoint    string
+		accessToken string
+		skipSsl     bool
 	}
 	getReturns struct {
 		result1 []byte
@@ -44,18 +44,18 @@ type FakeHttpWrapper struct {
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeHttpWrapper) Get(endpoint string, access_token string, skipSsl bool) ([]byte, error) {
+func (fake *FakeHttpWrapper) Get(endpoint string, accessToken string, skipSsl bool) ([]byte, error) {
 	fake.getMutex.Lock()
 	ret, specificReturn := fake.getReturnsOnCall[len(fake.getArgsForCall)]
 	fake.getArgsForCall = append(fake.getArgsForCall, struct {
-		endpoint     string
-		access_token string
-		skipSsl      bool
-	}{endpoint, access_token, skipSsl})
-	fake.recordInvocation("Get", []interface{}{endpoint, access_token, skipSsl})
+		endpoint    string
+		accessToken string
+		skipSsl     bool
+	}{endpoint, accessToken, skipSsl})
+	fake.recordInvocation("Get", []interface{}{endpoint, accessToken, skipSsl})
 	fake.getMutex.Unlock()
 	if fake.GetStub != nil {
-		return fake.GetStub(endpoint, access_token, skipSsl)
+		return fake.GetStub(endpoint, accessToken, skipSsl)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -72,7 +72,7 @@ func (fake *FakeHttpWrapper) GetCallCount() int {
 func (fake *FakeHttpWrapper) GetArgsForCall(i int) (string, string, bool) {
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
-	return fake.getArgsForCall[i].endpoint, fake.getArgsForCall[i].access_token, fake.getArgsForCall[i].skipSsl
+	return fake.getArgsForCall[i].endpoint, fake.getArgsForCall[i].accessToken, fake.getArgsForCall[i].skipSsl
 }
 
 func (fake *FakeHttpWrapper) GetReturns(result1 []byte, result2 error) {

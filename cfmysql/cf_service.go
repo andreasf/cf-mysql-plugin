@@ -24,7 +24,7 @@ func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, http
 	}
 }
 
-const SERVICE_KEY_NAME = "cf-mysql"
+const ServiceKeyName = "cf-mysql"
 
 type MysqlService struct {
 	Name     string
@@ -71,7 +71,7 @@ func (self *cfService) GetService(connection plugin.CliConnection, name string) 
 		return MysqlService{}, fmt.Errorf("unable to retrieve metadata for service %s: %s", name, err)
 	}
 
-	serviceKey, found, err := self.apiClient.GetServiceKey(connection, instance.Guid, SERVICE_KEY_NAME)
+	serviceKey, found, err := self.apiClient.GetServiceKey(connection, instance.Guid, ServiceKeyName)
 	if err != nil {
 		return MysqlService{}, fmt.Errorf("unable to retrieve service key: %s", err)
 	}
@@ -80,7 +80,7 @@ func (self *cfService) GetService(connection plugin.CliConnection, name string) 
 		return toServiceModel(name, serviceKey), nil
 	}
 
-	serviceKey, err = self.apiClient.CreateServiceKey(connection, instance.Guid, SERVICE_KEY_NAME)
+	serviceKey, err = self.apiClient.CreateServiceKey(connection, instance.Guid, ServiceKeyName)
 	if err != nil {
 		return MysqlService{}, fmt.Errorf("unable to create service key: %s", err)
 	}

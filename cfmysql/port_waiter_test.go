@@ -15,10 +15,10 @@ var _ = Describe("PortWaiter", func() {
 	var netWrapper *cfmysqlfakes.FakeNetWrapper
 	var portWaiter PortWaiter
 
-	const SUCCEED_AFTER_TRIES = 5
+	const SucceedAfterTries = 5
 	dialCount := 0
 	mockDial := func(network, address string) (net.Conn, error) {
-		if dialCount < SUCCEED_AFTER_TRIES - 1 {
+		if dialCount < SucceedAfterTries- 1 {
 			dialCount++
 			return nil, errors.New("GURU MEDITATION")
 		}
@@ -36,7 +36,7 @@ var _ = Describe("PortWaiter", func() {
 
 		portWaiter.WaitUntilOpen(523)
 
-		Expect(netWrapper.DialCallCount()).To(Equal(SUCCEED_AFTER_TRIES))
+		Expect(netWrapper.DialCallCount()).To(Equal(SucceedAfterTries))
 	})
 
 	It("Closes the connection", func() {

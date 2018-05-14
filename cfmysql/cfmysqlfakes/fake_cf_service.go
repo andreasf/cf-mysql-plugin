@@ -10,19 +10,6 @@ import (
 )
 
 type FakeCfService struct {
-	GetMysqlServicesStub        func(cliConnection plugin.CliConnection) ([]cfmysql.MysqlService, error)
-	getMysqlServicesMutex       sync.RWMutex
-	getMysqlServicesArgsForCall []struct {
-		cliConnection plugin.CliConnection
-	}
-	getMysqlServicesReturns struct {
-		result1 []cfmysql.MysqlService
-		result2 error
-	}
-	getMysqlServicesReturnsOnCall map[int]struct {
-		result1 []cfmysql.MysqlService
-		result2 error
-	}
 	GetStartedAppsStub        func(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
 	getStartedAppsMutex       sync.RWMutex
 	getStartedAppsArgsForCall []struct {
@@ -60,57 +47,6 @@ type FakeCfService struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
-}
-
-func (fake *FakeCfService) GetMysqlServices(cliConnection plugin.CliConnection) ([]cfmysql.MysqlService, error) {
-	fake.getMysqlServicesMutex.Lock()
-	ret, specificReturn := fake.getMysqlServicesReturnsOnCall[len(fake.getMysqlServicesArgsForCall)]
-	fake.getMysqlServicesArgsForCall = append(fake.getMysqlServicesArgsForCall, struct {
-		cliConnection plugin.CliConnection
-	}{cliConnection})
-	fake.recordInvocation("GetMysqlServices", []interface{}{cliConnection})
-	fake.getMysqlServicesMutex.Unlock()
-	if fake.GetMysqlServicesStub != nil {
-		return fake.GetMysqlServicesStub(cliConnection)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.getMysqlServicesReturns.result1, fake.getMysqlServicesReturns.result2
-}
-
-func (fake *FakeCfService) GetMysqlServicesCallCount() int {
-	fake.getMysqlServicesMutex.RLock()
-	defer fake.getMysqlServicesMutex.RUnlock()
-	return len(fake.getMysqlServicesArgsForCall)
-}
-
-func (fake *FakeCfService) GetMysqlServicesArgsForCall(i int) plugin.CliConnection {
-	fake.getMysqlServicesMutex.RLock()
-	defer fake.getMysqlServicesMutex.RUnlock()
-	return fake.getMysqlServicesArgsForCall[i].cliConnection
-}
-
-func (fake *FakeCfService) GetMysqlServicesReturns(result1 []cfmysql.MysqlService, result2 error) {
-	fake.GetMysqlServicesStub = nil
-	fake.getMysqlServicesReturns = struct {
-		result1 []cfmysql.MysqlService
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeCfService) GetMysqlServicesReturnsOnCall(i int, result1 []cfmysql.MysqlService, result2 error) {
-	fake.GetMysqlServicesStub = nil
-	if fake.getMysqlServicesReturnsOnCall == nil {
-		fake.getMysqlServicesReturnsOnCall = make(map[int]struct {
-			result1 []cfmysql.MysqlService
-			result2 error
-		})
-	}
-	fake.getMysqlServicesReturnsOnCall[i] = struct {
-		result1 []cfmysql.MysqlService
-		result2 error
-	}{result1, result2}
 }
 
 func (fake *FakeCfService) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
@@ -251,8 +187,6 @@ func (fake *FakeCfService) GetServiceReturnsOnCall(i int, result1 cfmysql.MysqlS
 func (fake *FakeCfService) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
-	fake.getMysqlServicesMutex.RLock()
-	defer fake.getMysqlServicesMutex.RUnlock()
 	fake.getStartedAppsMutex.RLock()
 	defer fake.getStartedAppsMutex.RUnlock()
 	fake.openSshTunnelMutex.RLock()

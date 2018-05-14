@@ -9,7 +9,7 @@ import (
 
 //go:generate counterfeiter . HttpWrapper
 type HttpWrapper interface {
-	Get(endpoint string, access_token string, skipSsl bool) ([]byte, error)
+	Get(endpoint string, accessToken string, skipSsl bool) ([]byte, error)
 	Post(url string, body io.Reader, accessToken string, sslDisabled bool) ([]byte, error)
 }
 

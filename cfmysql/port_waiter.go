@@ -18,7 +18,7 @@ func NewPortWaiter(netWrapper NetWrapper) PortWaiter {
 	}
 }
 
-const SLEEP_TIME = 100
+const SleepTime = 100
 
 type portWaiter struct {
 	NetWrapper NetWrapper
@@ -30,7 +30,7 @@ func (self *portWaiter) WaitUntilOpen(localPort int) {
 	var conn net.Conn
 	err := errors.New("")
 	for err != nil {
-		time.Sleep(SLEEP_TIME * time.Millisecond)
+		time.Sleep(SleepTime * time.Millisecond)
 		conn, err = self.NetWrapper.Dial("tcp", address)
 	}
 	self.NetWrapper.Close(conn)
