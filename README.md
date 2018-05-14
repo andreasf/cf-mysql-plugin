@@ -13,6 +13,7 @@ Cloud Foundry apps. Use it to
 ## Contents
 
 * [Usage](#usage)
+* [Removing service keys](#removing-service-keys)
 * [Installing and uninstalling](#installing-and-uninstalling)
 * [Building](#building)
 * [Details](#details)
@@ -105,24 +106,26 @@ $ cf mysqldump my-db table1 table2 --single-transaction > two-tables.sql
 ## Removing service keys
 
 The plugin creates a service key called 'cf-mysql' for each service instance a user connects to. The keys are reused
-when available and never deleted. Keys need to be removed before its service instance can be removed:
+when available and never deleted. Keys need to be removed manually before their service instances can be removed:
 
 ```bash
 $ cf delete-service -f somedb
 Deleting service somedb in org afleig-org / space acceptance as afleig@pivotal.io...
 FAILED
 Cannot delete service instance. Service keys, bindings, and shares must first be deleted.
-
+```
+Deleting the service failed. The CLI hints at service keys and app bindings that might still exist.
+```bash
 $ cf service-keys somedb
 Getting keys for service instance somedb as afleig@pivotal.io...
 
 name
 cf-mysql
 ```
-A key called 'cf-mysql' is found for the service instance 'somedb', because we have used the plugin some 'somedb'
+A key called 'cf-mysql' is found for the service instance 'somedb', because we have used the plugin with 'somedb'
 earlier. After removing the key, the service instance can be deleted:
 
-```
+```bash
 $ cf delete-service-key -f somedb cf-mysql
 Deleting key cf-mysql for service instance somedb as afleig@pivotal.io...
 OK
@@ -131,6 +134,8 @@ $ cf delete-service -f somedb
 Deleting service somedb in org afleig-org / space acceptance as afleig@pivotal.io...
 OK
 ```
+
+This behavior might change in the future as it's not optimal to leave a key around.
 
 ## Installing and uninstalling
 
