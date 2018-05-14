@@ -15,8 +15,6 @@ import (
 
 //go:generate counterfeiter . ApiClient
 type ApiClient interface {
-	GetServiceBindings(cliConnection plugin.CliConnection) ([]pluginModels.ServiceBinding, error)
-	GetServiceInstances(cliConnection plugin.CliConnection) ([]pluginModels.ServiceInstance, error)
 	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
 	GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.ServiceInstance, error)
 	GetServiceKey(cliConnection plugin.CliConnection, serviceInstanceGuid string, keyName string) (key pluginModels.ServiceKey, found bool, err error)
@@ -31,47 +29,6 @@ func NewApiClient(httpClient HttpWrapper) *apiClient {
 
 type apiClient struct {
 	httpClient HttpWrapper
-}
-
-func (self *apiClient) GetServiceInstances(cliConnection plugin.CliConnection) ([]pluginModels.ServiceInstance, error) {
-	var err error
-	var allInstances []pluginModels.ServiceInstance
-	nextUrl := "/v2/service_instances"
-
-	for nextUrl != "" {
-		instanceResponse, err := self.getFromCfApi(nextUrl, cliConnection)
-		if err != nil {
-			return nil, fmt.Errorf("Unable to retrieve service instances: %s", err)
-		}
-
-		var instances []pluginModels.ServiceInstance
-		nextUrl, instances, err = deserializeInstances(instanceResponse)
-		allInstances = append(allInstances, instances...)
-	}
-
-	return allInstances, err
-}
-
-func (self *apiClient) GetServiceBindings(cliConnection plugin.CliConnection) ([]pluginModels.ServiceBinding, error) {
-	var allBindings []pluginModels.ServiceBinding
-	nextUrl := "/v2/service_bindings"
-
-	for nextUrl != "" {
-		bindingsResp, err := self.getFromCfApi(nextUrl, cliConnection)
-		if err != nil {
-			return nil, fmt.Errorf("Unable to call service bindings endpoint: %s", err)
-		}
-
-		var bindings []pluginModels.ServiceBinding
-		nextUrl, bindings, err = deserializeBindings(bindingsResp)
-		if err != nil {
-			return nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
-		}
-
-		allBindings = append(allBindings, bindings...)
-	}
-
-	return allBindings, nil
 }
 
 func (self *apiClient) GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.ServiceInstance, error) {
@@ -210,18 +167,6 @@ func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceIn
 	}
 
 	return paginatedResources.NextUrl, paginatedResources.ToModel(), nil
-}
-
-func deserializeBindings(bindingResponse []byte) (string, []pluginModels.ServiceBinding, error) {
-	paginatedResources := new(resources.PaginatedServiceBindingResources)
-	err := json.Unmarshal(bindingResponse, paginatedResources)
-
-	if err != nil {
-		return "", nil, fmt.Errorf("Unable to deserialize service bindings: %s", err)
-	}
-
-	bindings, err := paginatedResources.ToModel()
-	return paginatedResources.NextUrl, bindings, err
 }
 
 func deserializeServiceKeys(keyResponse []byte) ([]pluginModels.ServiceKey, error) {

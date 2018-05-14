@@ -2,8 +2,6 @@ package cfmysql
 
 import (
 	"fmt"
-	"strings"
-
 	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
@@ -11,7 +9,6 @@ import (
 
 //go:generate counterfeiter . CfService
 type CfService interface {
-	GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error)
 	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
 	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, apps []sdkModels.GetAppsModel, localPort int)
 	GetService(connection plugin.CliConnection, name string) (MysqlService, error)
@@ -49,31 +46,6 @@ type cfService struct {
 type BindingResult struct {
 	Bindings []pluginModels.ServiceBinding
 	Err      error
-}
-
-func (self *cfService) GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error) {
-	bindingChan := make(chan BindingResult, 0)
-	go func() {
-		bindings, err := self.apiClient.GetServiceBindings(cliConnection)
-		bindingChan <- BindingResult{Bindings: bindings, Err: err}
-	}()
-
-	instances, err := self.apiClient.GetServiceInstances(cliConnection)
-	if err != nil {
-		return nil, err
-	}
-
-	bindingResult := <-bindingChan
-	if bindingResult.Err != nil {
-		return nil, bindingResult.Err
-	}
-
-	space, err := cliConnection.GetCurrentSpace()
-	if err != nil {
-		return nil, fmt.Errorf("Error retrieving current space: %s", err)
-	}
-
-	return getAvailableServices(bindingResult.Bindings, instances, space.Guid), nil
 }
 
 func (self *cfService) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
@@ -114,39 +86,6 @@ func (self *cfService) GetService(connection plugin.CliConnection, name string) 
 	}
 
 	return toServiceModel(name, serviceKey), nil
-}
-
-func getAvailableServices(bindings []pluginModels.ServiceBinding, instances []pluginModels.ServiceInstance, spaceGuid string) []MysqlService {
-	boundServiceCredentials := make(map[string]pluginModels.ServiceBinding)
-
-	for _, binding := range bindings {
-		boundServiceCredentials[binding.ServiceInstanceGuid] = binding
-	}
-
-	services := make([]MysqlService, 0, len(bindings))
-
-	for _, instance := range instances {
-		guid := instance.Guid
-		name := instance.Name
-
-		binding, serviceBound := boundServiceCredentials[guid]
-		if instance.SpaceGuid == spaceGuid && serviceBound && strings.HasPrefix(binding.Uri, "mysql://") {
-			services = append(services, makeServiceModel(name, binding))
-		}
-	}
-
-	return services
-}
-
-func makeServiceModel(name string, binding pluginModels.ServiceBinding) MysqlService {
-	return MysqlService{
-		Name:     name,
-		Hostname: binding.Hostname,
-		Port:     binding.Port,
-		DbName:   binding.DbName,
-		Username: binding.Username,
-		Password: binding.Password,
-	}
 }
 
 func toServiceModel(name string, serviceKey pluginModels.ServiceKey) MysqlService {

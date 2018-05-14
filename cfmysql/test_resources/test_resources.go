@@ -2,7 +2,6 @@ package test_resources
 
 import (
 	"io/ioutil"
-	"strings"
 )
 
 func LoadResource(filename string) []byte {
@@ -12,13 +11,4 @@ func LoadResource(filename string) []byte {
 	}
 
 	return contents
-}
-
-func LoadResourceLines(filename string) []string {
-	contents, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(err)
-	}
-
-	return strings.Split(string(contents), "\n")
 }
