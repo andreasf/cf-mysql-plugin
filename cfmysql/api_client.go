@@ -29,6 +29,7 @@ func NewApiClient(httpClient HttpWrapper) *apiClient {
 
 type apiClient struct {
 	httpClient HttpWrapper
+	cliConfig  *CliConfig
 }
 
 func (self *apiClient) GetService(cliConnection plugin.CliConnection, spaceGuid string, name string) (pluginModels.ServiceInstance, error) {
@@ -121,41 +122,48 @@ func (self *apiClient) GetStartedApps(cliConnection plugin.CliConnection) ([]sdk
 }
 
 func (self *apiClient) getFromCfApi(path string, cliConnection plugin.CliConnection) ([]byte, error) {
-	endpoint, err := cliConnection.ApiEndpoint()
+	config, err := self.getCliConfig(cliConnection)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get API endpoint: %s", err)
+		return nil, err
 	}
 
-	accessToken, err := cliConnection.AccessToken()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get access token: %s", err)
-	}
-
-	sslDisabled, err := cliConnection.IsSSLDisabled()
-	if err != nil {
-		return nil, fmt.Errorf("unable to check SSL status: %s", err)
-	}
-
-	return self.httpClient.Get(endpoint+path, accessToken, sslDisabled)
+	return self.httpClient.Get(config.ApiEndpoint+path, config.AccessToken, config.SslDisabled)
 }
 
 func (self *apiClient) postToCfApi(path string, body io.Reader, cliConnection plugin.CliConnection) ([]byte, error) {
-	endpoint, err := cliConnection.ApiEndpoint()
+	config, err := self.getCliConfig(cliConnection)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get API endpoint: %s", err)
+		return nil, err
 	}
 
-	accessToken, err := cliConnection.AccessToken()
-	if err != nil {
-		return nil, fmt.Errorf("unable to get access token: %s", err)
+	return self.httpClient.Post(config.ApiEndpoint+path, body, config.AccessToken, config.SslDisabled)
+}
+
+func (self *apiClient) getCliConfig(cliConnection plugin.CliConnection) (*CliConfig, error) {
+	if self.cliConfig == nil {
+		endpoint, err := cliConnection.ApiEndpoint()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get API endpoint: %s", err)
+		}
+
+		accessToken, err := cliConnection.AccessToken()
+		if err != nil {
+			return nil, fmt.Errorf("unable to get access token: %s", err)
+		}
+
+		sslDisabled, err := cliConnection.IsSSLDisabled()
+		if err != nil {
+			return nil, fmt.Errorf("unable to check SSL status: %s", err)
+		}
+
+		self.cliConfig = &CliConfig{
+			AccessToken: accessToken,
+			ApiEndpoint: endpoint,
+			SslDisabled: sslDisabled,
+		}
 	}
 
-	sslDisabled, err := cliConnection.IsSSLDisabled()
-	if err != nil {
-		return nil, fmt.Errorf("unable to check SSL status: %s", err)
-	}
-
-	return self.httpClient.Post(endpoint+path, body, accessToken, sslDisabled)
+	return self.cliConfig, nil
 }
 
 func deserializeInstances(jsonResponse []byte) (string, []pluginModels.ServiceInstance, error) {
@@ -202,4 +210,10 @@ func deserializeServiceKey(keyResponse []byte) (pluginModels.ServiceKey, error) 
 type ServiceKeyRequest struct {
 	Name                string `json:"name"`
 	ServiceInstanceGuid string `json:"service_instance_guid"`
+}
+
+type CliConfig struct {
+	AccessToken string
+	ApiEndpoint string
+	SslDisabled bool
 }
