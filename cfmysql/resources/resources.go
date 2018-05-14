@@ -70,7 +70,7 @@ type ServiceInstanceEntity struct {
 }
 
 func (self *PaginatedServiceInstanceResources) ToModel() []models.ServiceInstance {
-	convertedModels := []models.ServiceInstance{}
+	var convertedModels []models.ServiceInstance
 
 	for _, resource := range self.Resources {
 		model := models.ServiceInstance{}

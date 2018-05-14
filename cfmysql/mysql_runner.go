@@ -54,10 +54,10 @@ func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, 
 		return errors.New("'mysqldump' not found in PATH")
 	}
 
-	tableArgs := []string{}
+	var tableArgs []string
 	nonTableArgs := mysqlDumpArgs[0:]
 
-	for i, argument := range (mysqlDumpArgs) {
+	for i, argument := range mysqlDumpArgs {
 		if strings.HasPrefix(argument, "-") {
 			break
 		}
