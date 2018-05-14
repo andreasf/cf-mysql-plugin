@@ -1,0 +1,54 @@
+{
+  "total_results": 1,
+  "total_pages": 1,
+  "prev_url": null,
+  "next_url": "next-url",
+  "resources": [
+    {
+      "metadata": {
+        "guid": "service-key-guid",
+        "url": "/v2/service_keys/service-key-guid",
+        "created_at": "2018-05-07T08:34:57Z",
+        "updated_at": "2018-05-07T08:34:57Z"
+      },
+      "entity": {
+        "name": "service-key-name",
+        "service_instance_guid": "service-instance-guid",
+        "credentials": {
+          "jdbcUrl": "jdbc-url",
+          "uri": "uri",
+          "name": "db-name",
+          "hostname": "hostname",
+          "port": "3306",
+          "username": "username",
+          "password": "password"
+        },
+        "service_instance_url": "/v2/service_instances/service-instance-guid",
+        "service_key_parameters_url": "/v2/service_keys/service-key-guid/parameters"
+      }
+    },
+    {
+      "metadata": {
+        "guid": "service-key-guid-2",
+        "url": "/v2/service_keys/service-key-guid-2",
+        "created_at": "2018-05-07T08:34:57Z",
+        "updated_at": "2018-05-07T08:34:57Z"
+      },
+      "entity": {
+        "name": "service-key-with-integer-port",
+        "service_instance_guid": "service-instance-guid",
+        "credentials": {
+          "jdbcUrl": "jdbc-url",
+          "uri": "uri",
+          "name": "db-name",
+          "hostname": "hostname",
+          "port": 2342,
+          "username": "username",
+          "password": "password"
+        },
+        "service_instance_url": "/v2/service_instances/service-instance-guid",
+        "service_key_parameters_url": "/v2/service_keys/service-key-guid-2/parameters"
+      }
+    }
+  ]
+}

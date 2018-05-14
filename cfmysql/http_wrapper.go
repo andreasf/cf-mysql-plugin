@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"io"
 )
 
 //go:generate counterfeiter . HttpWrapper
 type HttpWrapper interface {
 	Get(endpoint string, access_token string, skipSsl bool) ([]byte, error)
+	Post(url string, body io.Reader, accessToken string, sslDisabled bool) ([]byte, error)
 }
 
 func NewHttpWrapper(factory HttpClientFactory) HttpWrapper {
@@ -24,10 +26,26 @@ type httpWrapper struct {
 func (self *httpWrapper) Get(url string, accessToken string, sslDisabled bool) ([]byte, error) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("Error creating request: %s", err)
+		return nil, fmt.Errorf("error creating request: %s", err)
 	}
 
+	return self.do(request, accessToken, sslDisabled)
+}
+
+func (self *httpWrapper) Post(url string, body io.Reader, accessToken string, sslDisabled bool) ([]byte, error) {
+	request, err := http.NewRequest("POST", url, body)
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %s", err)
+	}
+
+	request.Header.Add("Content-Type", "application/json")
+
+	return self.do(request, accessToken, sslDisabled)
+}
+
+func (self *httpWrapper) do(request *http.Request, accessToken string, sslDisabled bool) ([]byte, error) {
 	request.Header.Add("Authorization", accessToken)
+
 	client := self.httpClientFactory.NewClient(sslDisabled)
 
 	response, err := client.Do(request)
@@ -36,7 +54,7 @@ func (self *httpWrapper) Get(url string, accessToken string, sslDisabled bool) (
 	}
 
 	if !isSuccessCode(response.StatusCode) {
-		return nil, fmt.Errorf("HTTP status %d accessing %s", response.StatusCode, url)
+		return nil, fmt.Errorf("HTTP status %d accessing %s", response.StatusCode, request.URL.String())
 	}
 
 	body, err := ioutil.ReadAll(response.Body)

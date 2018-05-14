@@ -2,6 +2,7 @@
 package cfmysqlfakes
 
 import (
+	"io"
 	"sync"
 
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
@@ -20,6 +21,22 @@ type FakeHttpWrapper struct {
 		result2 error
 	}
 	getReturnsOnCall map[int]struct {
+		result1 []byte
+		result2 error
+	}
+	PostStub        func(url string, body io.Reader, accessToken string, sslDisabled bool) ([]byte, error)
+	postMutex       sync.RWMutex
+	postArgsForCall []struct {
+		url         string
+		body        io.Reader
+		accessToken string
+		sslDisabled bool
+	}
+	postReturns struct {
+		result1 []byte
+		result2 error
+	}
+	postReturnsOnCall map[int]struct {
 		result1 []byte
 		result2 error
 	}
@@ -80,11 +97,67 @@ func (fake *FakeHttpWrapper) GetReturnsOnCall(i int, result1 []byte, result2 err
 	}{result1, result2}
 }
 
+func (fake *FakeHttpWrapper) Post(url string, body io.Reader, accessToken string, sslDisabled bool) ([]byte, error) {
+	fake.postMutex.Lock()
+	ret, specificReturn := fake.postReturnsOnCall[len(fake.postArgsForCall)]
+	fake.postArgsForCall = append(fake.postArgsForCall, struct {
+		url         string
+		body        io.Reader
+		accessToken string
+		sslDisabled bool
+	}{url, body, accessToken, sslDisabled})
+	fake.recordInvocation("Post", []interface{}{url, body, accessToken, sslDisabled})
+	fake.postMutex.Unlock()
+	if fake.PostStub != nil {
+		return fake.PostStub(url, body, accessToken, sslDisabled)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.postReturns.result1, fake.postReturns.result2
+}
+
+func (fake *FakeHttpWrapper) PostCallCount() int {
+	fake.postMutex.RLock()
+	defer fake.postMutex.RUnlock()
+	return len(fake.postArgsForCall)
+}
+
+func (fake *FakeHttpWrapper) PostArgsForCall(i int) (string, io.Reader, string, bool) {
+	fake.postMutex.RLock()
+	defer fake.postMutex.RUnlock()
+	return fake.postArgsForCall[i].url, fake.postArgsForCall[i].body, fake.postArgsForCall[i].accessToken, fake.postArgsForCall[i].sslDisabled
+}
+
+func (fake *FakeHttpWrapper) PostReturns(result1 []byte, result2 error) {
+	fake.PostStub = nil
+	fake.postReturns = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeHttpWrapper) PostReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.PostStub = nil
+	if fake.postReturnsOnCall == nil {
+		fake.postReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.postReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeHttpWrapper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
 	fake.getMutex.RLock()
 	defer fake.getMutex.RUnlock()
+	fake.postMutex.RLock()
+	defer fake.postMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

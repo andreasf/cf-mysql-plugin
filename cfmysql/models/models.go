@@ -15,3 +15,13 @@ type ServiceBinding struct {
 	Username string
 	Password string
 }
+
+type ServiceKey struct {
+	ServiceInstanceGuid string
+	Uri      string
+	DbName   string
+	Hostname string
+	Port	 string
+	Username string
+	Password string
+}

@@ -129,17 +129,9 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 		appsChan <- StartedAppsResult{Apps: startedApps, Err: err}
 	}()
 
-	services, err := self.CfService.GetMysqlServices(cliConnection)
+	service, err := self.CfService.GetService(cliConnection, dbName)
 	if err != nil {
-		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve services: %s\n", err)
-		self.setErrorExit()
-		return
-	}
-
-	service, serviceFound := getServiceByName(services, dbName)
-	if !serviceFound {
-		fmt.Fprintf(self.Err, "FAILED\nService '%s' is not bound to an app, not a MySQL database or does not exist in the "+
-			"current space.\n", dbName)
+		fmt.Fprintf(self.Err, "FAILED\nUnable to retrieve service credentials: %s\n", err)
 		self.setErrorExit()
 		return
 	}
@@ -158,22 +150,13 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 	}
 
 	tunnelPort := self.PortFinder.GetPort()
-	self.CfService.OpenSshTunnel(cliConnection, *service, appsResult.Apps, tunnelPort)
+	self.CfService.OpenSshTunnel(cliConnection, service, appsResult.Apps, tunnelPort)
 
 	err = self.runClient(command, "127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, mysqlArgs...)
 	if err != nil {
 		fmt.Fprintf(self.Err, "FAILED\n%s", err)
 		self.setErrorExit()
 	}
-}
-
-func getServiceByName(services []MysqlService, dbName string) (*MysqlService, bool) {
-	for _, service := range (services) {
-		if service.Name == dbName {
-			return &service, true
-		}
-	}
-	return nil, false
 }
 
 func (self *MysqlPlugin) runClient(command string, hostname string, port int, dbName string, username string, password string, args ...string) error {

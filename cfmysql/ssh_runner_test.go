@@ -13,7 +13,6 @@ var _ = Describe("SshRunner", func() {
 	var sshRunner SshRunner
 	service := MysqlService{
 		Name: "database-a",
-		AppName: "",
 		Hostname: "database-a.host",
 		Port: "3306",
 		DbName: "dbname-a",

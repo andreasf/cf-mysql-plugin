@@ -14,6 +14,7 @@ type CfService interface {
 	GetMysqlServices(cliConnection plugin.CliConnection) ([]MysqlService, error)
 	GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error)
 	OpenSshTunnel(cliConnection plugin.CliConnection, toService MysqlService, apps []sdkModels.GetAppsModel, localPort int)
+	GetService(connection plugin.CliConnection, name string) (MysqlService, error)
 }
 
 func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient HttpWrapper, randWrapper RandWrapper) *cfService {
@@ -26,9 +27,10 @@ func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, http
 	}
 }
 
+const SERVICE_KEY_NAME = "cf-mysql"
+
 type MysqlService struct {
 	Name     string
-	AppName  string
 	Hostname string
 	Port     string
 	DbName   string
@@ -86,6 +88,34 @@ func (self *cfService) OpenSshTunnel(cliConnection plugin.CliConnection, toServi
 	self.portWaiter.WaitUntilOpen(localPort)
 }
 
+func (self *cfService) GetService(connection plugin.CliConnection, name string) (MysqlService, error) {
+	space, err := connection.GetCurrentSpace()
+	if err != nil {
+		return MysqlService{}, fmt.Errorf("unable to retrieve current space: %s", err)
+	}
+
+	instance, err := self.apiClient.GetService(connection, space.Guid, name)
+	if err != nil {
+		return MysqlService{}, fmt.Errorf("unable to retrieve metadata for service %s: %s", name, err)
+	}
+
+	serviceKey, found, err := self.apiClient.GetServiceKey(connection, instance.Guid, SERVICE_KEY_NAME)
+	if err != nil {
+		return MysqlService{}, fmt.Errorf("unable to retrieve service key: %s", err)
+	}
+
+	if found {
+		return toServiceModel(name, serviceKey), nil
+	}
+
+	serviceKey, err = self.apiClient.CreateServiceKey(connection, instance.Guid, SERVICE_KEY_NAME)
+	if err != nil {
+		return MysqlService{}, fmt.Errorf("unable to create service key: %s", err)
+	}
+
+	return toServiceModel(name, serviceKey), nil
+}
+
 func getAvailableServices(bindings []pluginModels.ServiceBinding, instances []pluginModels.ServiceInstance, spaceGuid string) []MysqlService {
 	boundServiceCredentials := make(map[string]pluginModels.ServiceBinding)
 
@@ -116,5 +146,16 @@ func makeServiceModel(name string, binding pluginModels.ServiceBinding) MysqlSer
 		DbName:   binding.DbName,
 		Username: binding.Username,
 		Password: binding.Password,
+	}
+}
+
+func toServiceModel(name string, serviceKey pluginModels.ServiceKey) MysqlService {
+	return MysqlService{
+		Name:     name,
+		Hostname: serviceKey.Hostname,
+		Port:     serviceKey.Port,
+		DbName:   serviceKey.DbName,
+		Username: serviceKey.Username,
+		Password: serviceKey.Password,
 	}
 }
