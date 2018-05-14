@@ -34,9 +34,6 @@ NAME:
    mysqldump - Dump a MySQL database
 
 USAGE:
-   Get a list of available databases:
-   cf mysqldump
-
    Dumping all tables in a database:
    cf mysqldump <service-name> [mysqldump args...]
 
@@ -105,6 +102,36 @@ Passing table names in addition to the database name will just dump those tables
 $ cf mysqldump my-db table1 table2 --single-transaction > two-tables.sql
 ```
 
+## Removing service keys
+
+The plugin creates a service key called 'cf-mysql' for each service instance a user connects to. The keys are reused
+when available and never deleted. Keys need to be removed before its service instance can be removed:
+
+```bash
+$ cf delete-service -f somedb
+Deleting service somedb in org afleig-org / space acceptance as afleig@pivotal.io...
+FAILED
+Cannot delete service instance. Service keys, bindings, and shares must first be deleted.
+
+$ cf service-keys somedb
+Getting keys for service instance somedb as afleig@pivotal.io...
+
+name
+cf-mysql
+```
+A key called 'cf-mysql' is found for the service instance 'somedb', because we have used the plugin some 'somedb'
+earlier. After removing the key, the service instance can be deleted:
+
+```
+$ cf delete-service-key -f somedb cf-mysql
+Deleting key cf-mysql for service instance somedb as afleig@pivotal.io...
+OK
+
+$ cf delete-service -f somedb
+Deleting service somedb in org afleig-org / space acceptance as afleig@pivotal.io...
+OK
+```
+
 ## Installing and uninstalling
 
 The easiest way is to install from the repository:
@@ -143,23 +170,24 @@ go build
 
 ### Obtaining credentials
 
-cf-mysql-plugin gets credentials from service bindings, which are only available when your database services are bound
-to a started app. If you don't currently have an app running, try the following to start an nginx app:
+cf-mysql-plugin creates a service key called 'cf-mysql' to obtain credentials. It no longer retrieves credentials from
+application environment variables, because with the introduction of [CredHub](https://github.com/cloudfoundry-incubator/credhub/blob/master/docs/secure-service-credentials.md),
+service brokers can decide to return a CredHub reference instead.
+
+The service key is currently not deleted after closing the connection. It can be deleted by running:
+
+```
+cf delete-service-key service-instance-name cf-mysql
+```
+
+A started application instance is still required in the current space for setting up an SSH tunnel. If you don't
+have an app running, try the following to start an nginx app:
 
 ```bash
 TEMP_DIR=`mktemp -d`
 pushd $TEMP_DIR
 touch Staticfile
-cf push static-app -m 64M --no-route
+cf push static-app -m 128M --no-route
 popd
 rm -r $TEMP_DIR
 ```
-
-Then, bind the database to your app with:
-
-```
-cf bind-service static-app database-name
-```
-
-Using service keys would be an alternative to service bindings. I decided against service keys, because they need to
-be deleted before a service can be deleted, making service administration more difficult.
