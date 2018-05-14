@@ -324,12 +324,12 @@ func NewPluginAndMocks() (*MysqlPlugin, Mocks) {
 	}
 
 	mysqlPlugin := NewMysqlPlugin(PluginConf{
-		mocks.In,
-		mocks.Out,
-		mocks.Err,
-		mocks.CfService,
-		mocks.MysqlRunner,
-		mocks.PortFinder,
+		In:          mocks.In,
+		Out:         mocks.Out,
+		Err:         mocks.Err,
+		CfService:   mocks.CfService,
+		MysqlRunner: mocks.MysqlRunner,
+		PortFinder:  mocks.PortFinder,
 	})
 
 	return mysqlPlugin, mocks
