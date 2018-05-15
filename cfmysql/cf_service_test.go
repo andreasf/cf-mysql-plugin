@@ -10,6 +10,7 @@ import (
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"code.cloudfoundry.org/cli/plugin"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	"github.com/onsi/gomega/gbytes"
 )
 
 var _ = Describe("CfService", func() {
@@ -23,6 +24,7 @@ var _ = Describe("CfService", func() {
 	var appList []plugin_models.GetAppsModel
 	var serviceKey models.ServiceKey
 	var expectedMysqlService MysqlService
+	var logWriter *gbytes.Buffer
 
 	BeforeEach(func() {
 		cliConnection = new(pluginfakes.FakeCliConnection)
@@ -38,8 +40,9 @@ var _ = Describe("CfService", func() {
 		portWaiter = new(cfmysqlfakes.FakePortWaiter)
 		mockHttp = new(cfmysqlfakes.FakeHttpWrapper)
 		mockRand = new(cfmysqlfakes.FakeRandWrapper)
+		logWriter = gbytes.NewBuffer()
 
-		service = NewCfService(apiClient, sshRunner, portWaiter, mockHttp, mockRand)
+		service = NewCfService(apiClient, sshRunner, portWaiter, mockHttp, mockRand, logWriter)
 
 		appList = []plugin_models.GetAppsModel{
 			{
@@ -115,10 +118,11 @@ var _ = Describe("CfService", func() {
 				sshRunner := new(cfmysqlfakes.FakeSshRunner)
 				portWaiter := new(cfmysqlfakes.FakePortWaiter)
 				mockRand := new(cfmysqlfakes.FakeRandWrapper)
+				logWriter := gbytes.NewBuffer()
 
 				mockRand.IntnReturns(1)
 
-				service := NewCfService(apiClient, sshRunner, portWaiter, mockHttp, mockRand)
+				service := NewCfService(apiClient, sshRunner, portWaiter, mockHttp, mockRand, logWriter)
 
 				sshRunner.OpenSshTunnelStub = notifyWhenGoroutineCalled
 
@@ -224,6 +228,8 @@ var _ = Describe("CfService", func() {
 				Expect(calledConnection).To(Equal(cliConnection))
 				Expect(calledInstanceGuid).To(Equal(instance.Guid))
 				Expect(calledKeyName).To(Equal("cf-mysql"))
+
+				Expect(logWriter).To(gbytes.Say("Creating new service key cf-mysql for service-instance-name...\n"))
 			})
 		})
 

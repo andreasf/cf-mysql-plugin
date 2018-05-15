@@ -5,6 +5,7 @@ import (
 	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
 	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	"io"
 )
 
 //go:generate counterfeiter . CfService
@@ -14,13 +15,14 @@ type CfService interface {
 	GetService(connection plugin.CliConnection, name string) (MysqlService, error)
 }
 
-func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient HttpWrapper, randWrapper RandWrapper) *cfService {
+func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, httpClient HttpWrapper, randWrapper RandWrapper, logWriter io.Writer) *cfService {
 	return &cfService{
 		apiClient:   apiClient,
 		sshRunner:   runner,
 		portWaiter:  waiter,
 		httpClient:  httpClient,
 		randWrapper: randWrapper,
+		logWriter: logWriter,
 	}
 }
 
@@ -41,6 +43,7 @@ type cfService struct {
 	portWaiter  PortWaiter
 	sshRunner   SshRunner
 	randWrapper RandWrapper
+	logWriter   io.Writer
 }
 
 type BindingResult struct {
@@ -80,6 +83,7 @@ func (self *cfService) GetService(connection plugin.CliConnection, name string) 
 		return toServiceModel(name, serviceKey), nil
 	}
 
+	fmt.Fprintf(self.logWriter, "Creating new service key %s for %s...\n", ServiceKeyName, name)
 	serviceKey, err = self.apiClient.CreateServiceKey(connection, instance.Guid, ServiceKeyName)
 	if err != nil {
 		return MysqlService{}, fmt.Errorf("unable to create service key: %s", err)
