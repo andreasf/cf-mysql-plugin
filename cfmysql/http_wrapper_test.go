@@ -11,6 +11,7 @@ import (
 	"github.com/onsi/gomega/ghttp"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"bytes"
+	"code.cloudfoundry.org/cli/cf/net/netfakes"
 )
 
 var _ = Describe("HttpWrapper", func() {
@@ -19,7 +20,7 @@ var _ = Describe("HttpWrapper", func() {
 		Context("When SSL is disabled", func() {
 			It("Configures an HTTP client without cert validation", func() {
 				mockFactory := new(cfmysqlfakes.FakeHttpClientFactory)
-				httpWrapper := cfmysql.NewHttpWrapper(mockFactory)
+				httpWrapper := cfmysql.NewHttpWrapper(mockFactory, new(netfakes.FakeRequestDumperInterface))
 
 				mockFactory.NewClientReturns(new(http.Client))
 				httpWrapper.Get("http://0.0.0.0/foo", "the-authorization-value", true)
@@ -33,7 +34,7 @@ var _ = Describe("HttpWrapper", func() {
 		Context("When SSL is enabled", func() {
 			It("Does not disable cert validation", func() {
 				mockFactory := new(cfmysqlfakes.FakeHttpClientFactory)
-				httpWrapper := cfmysql.NewHttpWrapper(mockFactory)
+				httpWrapper := cfmysql.NewHttpWrapper(mockFactory, new(netfakes.FakeRequestDumperInterface))
 
 				mockFactory.NewClientReturns(new(http.Client))
 				httpWrapper.Get("http://0.0.0.0/foo", "the-authorization-value", false)
@@ -126,11 +127,16 @@ var _ = Describe("HttpWrapper", func() {
 				ghttp.VerifyHeader(headers),
 			))
 
-			httpWrapper := MakeHttp()
+			dumper := new(netfakes.FakeRequestDumperInterface)
+			httpWrapper := cfmysql.NewHttpWrapper(cfmysql.NewHttpClientFactory(), dumper)
+
 			response, err := httpWrapper.Post(mockServer.URL()+"/path", bytes.NewBuffer(body), "access-token", true)
 
 			Expect(err).To(BeNil())
 			Expect(response).To(Equal([]byte("ok")))
+
+			Expect(dumper.DumpRequestCallCount()).To(Equal(1))
+			Expect(dumper.DumpResponseCallCount()).To(Equal(1))
 
 			mockServer.Close()
 		})
@@ -138,7 +144,7 @@ var _ = Describe("HttpWrapper", func() {
 		Context("When SSL is disabled", func() {
 			It("Configures an HTTP client without cert validation", func() {
 				mockFactory := new(cfmysqlfakes.FakeHttpClientFactory)
-				httpWrapper := cfmysql.NewHttpWrapper(mockFactory)
+				httpWrapper := cfmysql.NewHttpWrapper(mockFactory, new(netfakes.FakeRequestDumperInterface))
 
 				mockFactory.NewClientReturns(new(http.Client))
 				httpWrapper.Post("http://0.0.0.0/foo", bytes.NewBufferString(""), "the-authorization-value", true)
@@ -152,7 +158,7 @@ var _ = Describe("HttpWrapper", func() {
 		Context("When SSL is enabled", func() {
 			It("Does not disable cert validation", func() {
 				mockFactory := new(cfmysqlfakes.FakeHttpClientFactory)
-				httpWrapper := cfmysql.NewHttpWrapper(mockFactory)
+				httpWrapper := cfmysql.NewHttpWrapper(mockFactory, new(netfakes.FakeRequestDumperInterface))
 
 				mockFactory.NewClientReturns(new(http.Client))
 				httpWrapper.Post("http://0.0.0.0/foo", bytes.NewBufferString(""), "the-authorization-value", false)
@@ -166,5 +172,5 @@ var _ = Describe("HttpWrapper", func() {
 })
 
 func MakeHttp() cfmysql.HttpWrapper {
-	return cfmysql.NewHttpWrapper(cfmysql.NewHttpClientFactory())
+	return cfmysql.NewHttpWrapper(cfmysql.NewHttpClientFactory(), new(netfakes.FakeRequestDumperInterface))
 }

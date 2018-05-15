@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"io"
+	"code.cloudfoundry.org/cli/cf/net"
 )
 
 //go:generate counterfeiter . HttpWrapper
@@ -13,14 +14,16 @@ type HttpWrapper interface {
 	Post(url string, body io.Reader, accessToken string, sslDisabled bool) ([]byte, error)
 }
 
-func NewHttpWrapper(factory HttpClientFactory) HttpWrapper {
+func NewHttpWrapper(factory HttpClientFactory, requestDumper net.RequestDumperInterface) HttpWrapper {
 	return &httpWrapper{
 		httpClientFactory: factory,
+		requestDumper:     requestDumper,
 	}
 }
 
 type httpWrapper struct {
 	httpClientFactory HttpClientFactory
+	requestDumper     net.RequestDumperInterface
 }
 
 func (self *httpWrapper) Get(url string, accessToken string, sslDisabled bool) ([]byte, error) {
@@ -48,10 +51,14 @@ func (self *httpWrapper) do(request *http.Request, accessToken string, sslDisabl
 
 	client := self.httpClientFactory.NewClient(sslDisabled)
 
+	self.requestDumper.DumpRequest(request)
+
 	response, err := client.Do(request)
 	if err != nil {
 		return nil, err
 	}
+
+	self.requestDumper.DumpResponse(response)
 
 	if !isSuccessCode(response.StatusCode) {
 		return nil, fmt.Errorf("HTTP status %d accessing %s", response.StatusCode, request.URL.String())
