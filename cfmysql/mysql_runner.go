@@ -1,11 +1,11 @@
 package cfmysql
 
 import (
-	"os/exec"
-	"strconv"
 	"code.cloudfoundry.org/cli/cf/errors"
 	"fmt"
 	"os"
+	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -63,7 +63,7 @@ func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, 
 		}
 
 		tableArgs = append(tableArgs, argument)
-		nonTableArgs = mysqlDumpArgs[i + 1:]
+		nonTableArgs = mysqlDumpArgs[i+1:]
 	}
 
 	args := []string{"-u", username, "-p" + password, "-h", hostname, "-P", strconv.Itoa(port)}
@@ -85,5 +85,5 @@ func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, 
 }
 
 func (self *mysqlRunner) MakeMysqlCommand(hostname string, port int, dbName string, username string, password string) *exec.Cmd {
-	return exec.Command("mysql", "-u", "username", "-p" + password, "-h", "hostname", "-P", strconv.Itoa(port), dbName)
+	return exec.Command("mysql", "-u", "username", "-p"+password, "-h", "hostname", "-P", strconv.Itoa(port), dbName)
 }

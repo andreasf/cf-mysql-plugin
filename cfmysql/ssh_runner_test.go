@@ -1,21 +1,21 @@
 package cfmysql_test
 
 import (
+	"code.cloudfoundry.org/cli/plugin/pluginfakes"
+	"errors"
 	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"code.cloudfoundry.org/cli/plugin/pluginfakes"
-	"errors"
 )
 
 var _ = Describe("SshRunner", func() {
 	var cliConnection *pluginfakes.FakeCliConnection
 	var sshRunner SshRunner
 	service := MysqlService{
-		Name: "database-a",
+		Name:     "database-a",
 		Hostname: "database-a.host",
-		Port: "3306",
-		DbName: "dbname-a",
+		Port:     "3306",
+		DbName:   "dbname-a",
 		Username: "username-a",
 		Password: "password-a",
 	}

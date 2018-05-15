@@ -1,10 +1,10 @@
 package cfmysql
 
 import (
-	"time"
-	"strconv"
 	"errors"
 	"net"
+	"strconv"
+	"time"
 )
 
 //go:generate counterfeiter . PortWaiter

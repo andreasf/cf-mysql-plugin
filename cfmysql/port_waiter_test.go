@@ -3,12 +3,12 @@ package cfmysql_test
 import (
 	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
 
+	"errors"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/netfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"net"
-	"errors"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/netfakes"
 )
 
 var _ = Describe("PortWaiter", func() {
@@ -18,7 +18,7 @@ var _ = Describe("PortWaiter", func() {
 	const SucceedAfterTries = 5
 	dialCount := 0
 	mockDial := func(network, address string) (net.Conn, error) {
-		if dialCount < SucceedAfterTries- 1 {
+		if dialCount < SucceedAfterTries-1 {
 			dialCount++
 			return nil, errors.New("GURU MEDITATION")
 		}

@@ -3,10 +3,10 @@ package cfmysql_test
 import (
 	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
 
+	"errors"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
-	"errors"
 	"os"
 )
 

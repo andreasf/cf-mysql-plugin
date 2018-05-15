@@ -1,11 +1,11 @@
 package cfmysql
 
 import (
+	"code.cloudfoundry.org/cli/cf/net"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
-	"io"
-	"code.cloudfoundry.org/cli/cf/net"
 )
 
 //go:generate counterfeiter . HttpWrapper

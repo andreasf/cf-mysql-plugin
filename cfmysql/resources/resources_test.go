@@ -3,13 +3,13 @@ package resources_test
 import (
 	. "github.com/andreasf/cf-mysql-plugin/cfmysql/resources"
 
+	"code.cloudfoundry.org/cli/cf/api/resources"
+	"encoding/json"
+	"errors"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/test_resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/test_resources"
-	"encoding/json"
-	"code.cloudfoundry.org/cli/cf/api/resources"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
-	"errors"
 )
 
 var _ = Describe("Resources", func() {

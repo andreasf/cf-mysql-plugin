@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/andreasf/cf-mysql-plugin/cfmysql"
-	"github.com/onsi/gomega/ghttp"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	"bytes"
 	"code.cloudfoundry.org/cli/cf/net/netfakes"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
+	"github.com/onsi/gomega/ghttp"
 )
 
 var _ = Describe("HttpWrapper", func() {

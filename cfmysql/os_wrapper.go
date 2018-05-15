@@ -11,7 +11,7 @@ func NewOsWrapper() OsWrapper {
 	return new(osWrapper)
 }
 
-type osWrapper struct {}
+type osWrapper struct{}
 
 func (self *osWrapper) LookupEnv(key string) (string, bool) {
 	return os.LookupEnv(key)

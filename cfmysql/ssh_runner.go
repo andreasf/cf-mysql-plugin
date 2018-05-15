@@ -2,8 +2,8 @@ package cfmysql
 
 import (
 	"code.cloudfoundry.org/cli/plugin"
-	"strconv"
 	"fmt"
+	"strconv"
 )
 
 //go:generate counterfeiter . SshRunner

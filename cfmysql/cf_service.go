@@ -1,9 +1,9 @@
 package cfmysql
 
 import (
-	"fmt"
 	"code.cloudfoundry.org/cli/plugin"
 	sdkModels "code.cloudfoundry.org/cli/plugin/models"
+	"fmt"
 	pluginModels "github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 	"io"
 )
@@ -22,7 +22,7 @@ func NewCfService(apiClient ApiClient, runner SshRunner, waiter PortWaiter, http
 		portWaiter:  waiter,
 		httpClient:  httpClient,
 		randWrapper: randWrapper,
-		logWriter: logWriter,
+		logWriter:   logWriter,
 	}
 }
 

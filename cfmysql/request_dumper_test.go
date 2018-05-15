@@ -1,15 +1,15 @@
 package cfmysql_test
 
 import (
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"code.cloudfoundry.org/cli/cf/terminal"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
-	"net/http"
-	"regexp"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
-	"code.cloudfoundry.org/cli/cf/terminal"
+	"net/http"
 	"net/url"
+	"regexp"
 )
 
 var _ = Describe("RequestDumper", func() {
@@ -24,17 +24,17 @@ var _ = Describe("RequestDumper", func() {
 		Expect(err).To(BeNil())
 
 		request = http.Request{
-			Method: "BARK",
-			URL: url,
-			Proto: "HTTP/1.1",
+			Method:     "BARK",
+			URL:        url,
+			Proto:      "HTTP/1.1",
 			ProtoMajor: 1,
 			ProtoMinor: 1,
 		}
 
 		response = http.Response{
-			Status: "BORK",
+			Status:     "BORK",
 			StatusCode: 200,
-			Proto: "HTTP/1.1",
+			Proto:      "HTTP/1.1",
 			ProtoMajor: 1,
 			ProtoMinor: 1,
 		}

@@ -1,8 +1,8 @@
 package cfmysql
 
 import (
-	"net/http"
 	"crypto/tls"
+	"net/http"
 )
 
 //go:generate counterfeiter . HttpClientFactory
@@ -14,7 +14,7 @@ func NewHttpClientFactory() HttpClientFactory {
 	return new(httpClientFactory)
 }
 
-type httpClientFactory struct {}
+type httpClientFactory struct{}
 
 func (self *httpClientFactory) NewClient(sslDisabled bool) *http.Client {
 	transport := &http.Transport{

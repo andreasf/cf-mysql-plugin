@@ -12,7 +12,7 @@ func NewNetWrapper() NetWrapper {
 	return new(netWrapper)
 }
 
-type netWrapper struct {}
+type netWrapper struct{}
 
 func (self *netWrapper) Dial(network, address string) (net.Conn, error) {
 	return net.Dial(network, address)

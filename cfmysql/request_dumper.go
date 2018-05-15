@@ -1,11 +1,11 @@
 package cfmysql
 
 import (
+	"code.cloudfoundry.org/cli/cf/i18n"
 	"code.cloudfoundry.org/cli/cf/net"
+	"code.cloudfoundry.org/cli/cf/trace"
 	"io"
 	"net/http"
-	"code.cloudfoundry.org/cli/cf/i18n"
-	"code.cloudfoundry.org/cli/cf/trace"
 )
 
 type conditionalRequestDumper struct {

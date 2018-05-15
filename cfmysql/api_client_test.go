@@ -6,15 +6,15 @@ import (
 	"errors"
 	"fmt"
 
+	"bytes"
 	"code.cloudfoundry.org/cli/plugin/models"
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/test_resources"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 	"io"
-	"bytes"
 )
 
 var _ = Describe("ApiClient", func() {

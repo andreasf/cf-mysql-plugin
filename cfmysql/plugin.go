@@ -2,9 +2,9 @@ package cfmysql
 
 import (
 	"code.cloudfoundry.org/cli/plugin"
-	"io"
-	"fmt"
 	"code.cloudfoundry.org/cli/plugin/models"
+	"fmt"
+	"io"
 )
 
 type MysqlPlugin struct {

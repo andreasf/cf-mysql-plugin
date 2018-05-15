@@ -3,10 +3,10 @@ package resources
 import (
 	"code.cloudfoundry.org/cli/cf/api/resources"
 	"encoding/json"
-	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
-	"strings"
-	"strconv"
 	"fmt"
+	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
+	"strconv"
+	"strings"
 )
 
 type ServiceBindingResource struct {
@@ -21,9 +21,9 @@ type ServiceBindingEntity struct {
 }
 
 type MysqlCredentials struct {
-	Uri      string          `json:"uri"`
-	DbName   string          `json:"name"`
-	Hostname string          `json:"hostname"`
+	Uri      string `json:"uri"`
+	DbName   string `json:"name"`
+	Hostname string `json:"hostname"`
 	Port     string
 	RawPort  json.RawMessage `json:"port"`
 	Username string          `json:"username"`
