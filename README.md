@@ -161,7 +161,7 @@ $ cf uninstall-plugin mysql
 
 ```bash
 # download dependencies
-go get -v ./...
+go get -v -t ./...
 go get github.com/onsi/ginkgo
 go get github.com/onsi/gomega
 go install github.com/onsi/ginkgo/ginkgo
