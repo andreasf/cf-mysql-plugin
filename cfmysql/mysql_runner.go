@@ -83,7 +83,3 @@ func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, 
 
 	return nil
 }
-
-func (self *mysqlRunner) MakeMysqlCommand(hostname string, port int, dbName string, username string, password string) *exec.Cmd {
-	return exec.Command("mysql", "-u", "username", "-p"+password, "-h", "hostname", "-P", strconv.Itoa(port), dbName)
-}
