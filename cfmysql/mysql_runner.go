@@ -11,27 +11,38 @@ import (
 
 //go:generate counterfeiter . MysqlRunner
 type MysqlRunner interface {
-	RunMysql(hostname string, port int, dbName string, username string, password string, args ...string) error
+	RunMysql(hostname string, port int, dbName string, username string, password string, caCert string, args ...string) error
 	RunMysqlDump(hostname string, port int, dbName string, username string, password string, args ...string) error
 }
 
-func NewMysqlRunner(execWrapper ExecWrapper) MysqlRunner {
+func NewMysqlRunner(execWrapper ExecWrapper, ioUtilWrapper IoUtilWrapper, osWrapper OsWrapper) MysqlRunner {
 	return &mysqlRunner{
-		execWrapper: execWrapper,
+		execWrapper:   execWrapper,
+		ioUtilWrapper: ioUtilWrapper,
+		osWrapper:     osWrapper,
 	}
 }
 
 type mysqlRunner struct {
-	execWrapper ExecWrapper
+	execWrapper   ExecWrapper
+	ioUtilWrapper IoUtilWrapper
+	osWrapper     OsWrapper
 }
 
-func (self *mysqlRunner) RunMysql(hostname string, port int, dbName string, username string, password string, mysqlArgs ...string) error {
+func (self *mysqlRunner) RunMysql(hostname string, port int, dbName string, username string, password string, caCert string, mysqlArgs ...string) error {
 	path, err := self.execWrapper.LookPath("mysql")
 	if err != nil {
 		return errors.New("'mysql' client not found in PATH")
 	}
 
+	caCertArgs, caCertPath, err := self.storeCaCert(path, caCert)
+	defer self.osWrapper.Remove(caCertPath)
+	if err != nil {
+		return fmt.Errorf("error preparing TLS arguments: %s", err)
+	}
+
 	args := []string{"-u", username, "-p" + password, "-h", hostname, "-P", strconv.Itoa(port)}
+	args = append(args, caCertArgs...)
 	args = append(args, mysqlArgs...)
 	args = append(args, dbName)
 
@@ -82,4 +93,38 @@ func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, 
 	}
 
 	return nil
+}
+
+func (self *mysqlRunner) storeCaCert(mysqlPath string, caCert string) ([]string, string, error) {
+	if caCert == "" {
+		return []string{}, "", nil
+	}
+
+	caCertFile, err := self.ioUtilWrapper.TempFile("", "mysql-ca-cert-*.pem")
+	if err != nil {
+		return []string{}, "", fmt.Errorf("error creating temp file: %s", err)
+	}
+
+	caCertPath := self.osWrapper.Name(caCertFile)
+
+	_, err = self.osWrapper.WriteString(caCertFile, caCert)
+	if err != nil {
+		return []string{}, "", fmt.Errorf("error writing CA certificate to temp file: %s", err)
+	}
+
+	cmd := exec.Command(mysqlPath, "--version")
+	mysqlVersionOutput, err := self.execWrapper.CombinedOutput(cmd)
+	if err != nil {
+		return []string{}, "", fmt.Errorf("error determining mysql client version: %s", err)
+	}
+
+	return self.caCertArgs(caCertPath, string(mysqlVersionOutput)), caCertPath, nil
+}
+
+func (self *mysqlRunner) caCertArgs(caCertPath string, mysqlVersionOutput string) []string {
+	if strings.Contains(mysqlVersionOutput, "MariaDB") {
+		return []string{"--ssl-ca=" + caCertPath, "--ssl-verify-server-cert"}
+	} else {
+		return []string{"--ssl-ca=" + caCertPath, "--ssl-mode=VERIFY_IDENTITY"}
+	}
 }

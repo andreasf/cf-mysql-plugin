@@ -1,9 +1,8 @@
 package cfmysql_test
 
 import (
-	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
-
 	"errors"
+	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/cfmysqlfakes"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -13,18 +12,22 @@ import (
 var _ = Describe("MysqlRunner", func() {
 	Context("RunMysql", func() {
 		var exec *cfmysqlfakes.FakeExecWrapper
+		var ioutilWrapper *cfmysqlfakes.FakeIoUtilWrapper
+		var osWrapper *cfmysqlfakes.FakeOsWrapper
 		var runner MysqlRunner
 
 		BeforeEach(func() {
 			exec = new(cfmysqlfakes.FakeExecWrapper)
-			runner = NewMysqlRunner(exec)
+			ioutilWrapper = new(cfmysqlfakes.FakeIoUtilWrapper)
+			osWrapper = new(cfmysqlfakes.FakeOsWrapper)
+			runner = NewMysqlRunner(exec, ioutilWrapper, osWrapper)
 		})
 
 		Context("When mysql is not in PATH", func() {
 			It("Returns an error", func() {
 				exec.LookPathReturns("", errors.New("PC LOAD LETTER"))
 
-				err := runner.RunMysql("hostname", 42, "dbname", "username", "password")
+				err := runner.RunMysql("hostname", 42, "dbname", "username", "password", "")
 
 				Expect(err).To(Equal(errors.New("'mysql' client not found in PATH")))
 				Expect(exec.LookPathArgsForCall(0)).To(Equal("mysql"))
@@ -36,7 +39,7 @@ var _ = Describe("MysqlRunner", func() {
 				exec.LookPathReturns("/path/to/mysql", nil)
 				exec.RunReturns(errors.New("PC LOAD LETTER"))
 
-				err := runner.RunMysql("hostname", 42, "dbname", "username", "password")
+				err := runner.RunMysql("hostname", 42, "dbname", "username", "password", "")
 
 				Expect(err).To(Equal(errors.New("error running mysql client: PC LOAD LETTER")))
 			})
@@ -46,7 +49,7 @@ var _ = Describe("MysqlRunner", func() {
 			It("Calls mysql with the right arguments", func() {
 				exec.LookPathReturns("/path/to/mysql", nil)
 
-				err := runner.RunMysql("hostname", 42, "dbname", "username", "password")
+				err := runner.RunMysql("hostname", 42, "dbname", "username", "password", "")
 
 				Expect(err).To(BeNil())
 				Expect(exec.LookPathCallCount()).To(Equal(1))
@@ -65,7 +68,7 @@ var _ = Describe("MysqlRunner", func() {
 			It("Calls mysql with the right arguments", func() {
 				exec.LookPathReturns("/path/to/mysql", nil)
 
-				err := runner.RunMysql("hostname", 42, "dbname", "username", "password", "--foo", "bar", "--baz")
+				err := runner.RunMysql("hostname", 42, "dbname", "username", "password", "", "--foo", "bar", "--baz")
 
 				Expect(err).To(BeNil())
 				Expect(exec.LookPathCallCount()).To(Equal(1))
@@ -79,15 +82,107 @@ var _ = Describe("MysqlRunner", func() {
 				Expect(cmd.Stderr).To(Equal(os.Stderr))
 			})
 		})
+
+		Context("When mysql is in PATH and a TLS CA certificate is part of the service credentials", func() {
+			Context("With a mysql client from MariaDB", func() {
+				It("Stores the cert in a temp file and calls mysql with --ssl-verify-server-cert", func() {
+					exec.LookPathReturns("/path/to/mysql", nil)
+					exec.CombinedOutputReturns([]byte("mysql  Ver 15.1 Distrib 10.2.3-MariaDB, for Multivac\n"), nil)
+					tempFile := new(os.File)
+					ioutilWrapper.TempFileReturns(tempFile, nil)
+					osWrapper.NameReturns("/path/to/cert.pem")
+
+					err := runner.RunMysql("hostname", 42, "dbname", "username", "password", "cert-content", "--foo", "bar", "--baz")
+
+					Expect(err).To(BeNil())
+					Expect(exec.LookPathCallCount()).To(Equal(1))
+					Expect(ioutilWrapper.TempFileCallCount()).To(Equal(1))
+					Expect(osWrapper.WriteStringCallCount()).To(Equal(1))
+					Expect(osWrapper.NameCallCount()).To(Equal(1))
+					Expect(exec.CombinedOutputCallCount()).To(Equal(1))
+					Expect(exec.RunCallCount()).To(Equal(1))
+					Expect(osWrapper.RemoveCallCount()).To(Equal(1))
+
+					versionCmd := exec.CombinedOutputArgsForCall(0)
+					Expect(versionCmd.Path).To(Equal("/path/to/mysql"))
+					Expect(versionCmd.Args).To(Equal([]string{"/path/to/mysql", "--version"}))
+
+					tempFileDir, tempFilePattern := ioutilWrapper.TempFileArgsForCall(0)
+					Expect(tempFileDir).To(Equal(""))
+					Expect(tempFilePattern).To(Equal("mysql-ca-cert-*.pem"))
+
+					writeStringFile, writeStringString := osWrapper.WriteStringArgsForCall(0)
+					Expect(writeStringFile).To(BeIdenticalTo(tempFile))
+					Expect(writeStringString).To(Equal("cert-content"))
+
+					cmd := exec.RunArgsForCall(0)
+					Expect(cmd.Path).To(Equal("/path/to/mysql"))
+					Expect(cmd.Args).To(Equal([]string{"/path/to/mysql", "-u", "username", "-ppassword", "-h", "hostname", "-P", "42", "--ssl-ca=/path/to/cert.pem", "--ssl-verify-server-cert", "--foo", "bar", "--baz", "dbname"}))
+					Expect(cmd.Stdin).To(Equal(os.Stdin))
+					Expect(cmd.Stdout).To(Equal(os.Stdout))
+					Expect(cmd.Stderr).To(Equal(os.Stderr))
+
+					removePath := osWrapper.RemoveArgsForCall(0)
+					Expect(removePath).To(Equal("/path/to/cert.pem"))
+				})
+			})
+
+			Context("With a mysql client from Oracle", func() {
+				It("Stores the cert in a temp file and calls mysql with --ssl-mode=VERIFY_IDENTITY", func() {
+					exec.LookPathReturns("/path/to/mysql", nil)
+					exec.CombinedOutputReturns([]byte("mysql  Ver 1.2.3 for C64 BASIC\n"), nil)
+					tempFile := new(os.File)
+					ioutilWrapper.TempFileReturns(tempFile, nil)
+					osWrapper.NameReturns("/path/to/cert.pem")
+
+					err := runner.RunMysql("hostname", 42, "dbname", "username", "password", "cert-content", "--foo", "bar", "--baz")
+
+					Expect(err).To(BeNil())
+					Expect(exec.LookPathCallCount()).To(Equal(1))
+					Expect(ioutilWrapper.TempFileCallCount()).To(Equal(1))
+					Expect(osWrapper.WriteStringCallCount()).To(Equal(1))
+					Expect(osWrapper.NameCallCount()).To(Equal(1))
+					Expect(exec.CombinedOutputCallCount()).To(Equal(1))
+					Expect(exec.RunCallCount()).To(Equal(1))
+					Expect(osWrapper.RemoveCallCount()).To(Equal(1))
+
+					versionCmd := exec.CombinedOutputArgsForCall(0)
+					Expect(versionCmd.Path).To(Equal("/path/to/mysql"))
+					Expect(versionCmd.Args).To(Equal([]string{"/path/to/mysql", "--version"}))
+
+					tempFileDir, tempFilePattern := ioutilWrapper.TempFileArgsForCall(0)
+					Expect(tempFileDir).To(Equal(""))
+					Expect(tempFilePattern).To(Equal("mysql-ca-cert-*.pem"))
+
+					writeStringFile, writeStringString := osWrapper.WriteStringArgsForCall(0)
+					Expect(writeStringFile).To(BeIdenticalTo(tempFile))
+					Expect(writeStringString).To(Equal("cert-content"))
+
+					cmd := exec.RunArgsForCall(0)
+					Expect(cmd.Path).To(Equal("/path/to/mysql"))
+					Expect(cmd.Args).To(Equal([]string{"/path/to/mysql", "-u", "username", "-ppassword", "-h", "hostname", "-P", "42", "--ssl-ca=/path/to/cert.pem", "--ssl-mode=VERIFY_IDENTITY", "--foo", "bar", "--baz", "dbname"}))
+					Expect(cmd.Stdin).To(Equal(os.Stdin))
+					Expect(cmd.Stdout).To(Equal(os.Stdout))
+					Expect(cmd.Stderr).To(Equal(os.Stderr))
+
+					removePath := osWrapper.RemoveArgsForCall(0)
+					Expect(removePath).To(Equal("/path/to/cert.pem"))
+				})
+			})
+		})
 	})
 
 	Context("RunMysqlDump", func() {
 		var exec *cfmysqlfakes.FakeExecWrapper
+		var ioutil *cfmysqlfakes.FakeIoUtilWrapper
+		var osWrapper *cfmysqlfakes.FakeOsWrapper
 		var runner MysqlRunner
 
 		BeforeEach(func() {
 			exec = new(cfmysqlfakes.FakeExecWrapper)
-			runner = NewMysqlRunner(exec)
+			ioutil = new(cfmysqlfakes.FakeIoUtilWrapper)
+			osWrapper = new(cfmysqlfakes.FakeOsWrapper)
+			runner = NewMysqlRunner(exec, ioutil, osWrapper)
 		})
 
 		Context("When mysqldump is not in PATH", func() {

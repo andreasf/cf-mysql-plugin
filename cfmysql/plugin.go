@@ -162,7 +162,7 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 func (self *MysqlPlugin) runClient(command string, hostname string, port int, dbName string, username string, password string, args ...string) error {
 	switch command {
 	case "mysql":
-		return self.MysqlRunner.RunMysql(hostname, port, dbName, username, password, args...)
+		return self.MysqlRunner.RunMysql(hostname, port, dbName, username, password, "", args...)
 
 	case "mysqldump":
 		return self.MysqlRunner.RunMysqlDump(hostname, port, dbName, username, password, args...)

@@ -114,7 +114,7 @@ var _ = Describe("Plugin", func() {
 				Expect(mocks.PortFinder.GetPortCallCount()).To(Equal(1))
 				Expect(mocks.MysqlRunner.RunMysqlCallCount()).To(Equal(1))
 
-				hostname, port, dbName, username, password, _ := mocks.MysqlRunner.RunMysqlArgsForCall(0)
+				hostname, port, dbName, username, password, _, _ := mocks.MysqlRunner.RunMysqlArgsForCall(0)
 				Expect(hostname).To(Equal("127.0.0.1"))
 				Expect(port).To(Equal(2342))
 				Expect(dbName).To(Equal(serviceA.DbName))
@@ -135,7 +135,7 @@ var _ = Describe("Plugin", func() {
 					Expect(mocks.PortFinder.GetPortCallCount()).To(Equal(1))
 					Expect(mocks.MysqlRunner.RunMysqlCallCount()).To(Equal(1))
 
-					hostname, port, dbName, username, password, args := mocks.MysqlRunner.RunMysqlArgsForCall(0)
+					hostname, port, dbName, username, password, _, args := mocks.MysqlRunner.RunMysqlArgsForCall(0)
 					Expect(hostname).To(Equal("127.0.0.1"))
 					Expect(port).To(Equal(2342))
 					Expect(dbName).To(Equal(serviceA.DbName))

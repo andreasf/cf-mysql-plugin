@@ -9,6 +9,19 @@ import (
 )
 
 type FakeExecWrapper struct {
+	CombinedOutputStub        func(*exec.Cmd) ([]byte, error)
+	combinedOutputMutex       sync.RWMutex
+	combinedOutputArgsForCall []struct {
+		arg1 *exec.Cmd
+	}
+	combinedOutputReturns struct {
+		result1 []byte
+		result2 error
+	}
+	combinedOutputReturnsOnCall map[int]struct {
+		result1 []byte
+		result2 error
+	}
 	LookPathStub        func(file string) (string, error)
 	lookPathMutex       sync.RWMutex
 	lookPathArgsForCall []struct {
@@ -35,6 +48,57 @@ type FakeExecWrapper struct {
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
+}
+
+func (fake *FakeExecWrapper) CombinedOutput(arg1 *exec.Cmd) ([]byte, error) {
+	fake.combinedOutputMutex.Lock()
+	ret, specificReturn := fake.combinedOutputReturnsOnCall[len(fake.combinedOutputArgsForCall)]
+	fake.combinedOutputArgsForCall = append(fake.combinedOutputArgsForCall, struct {
+		arg1 *exec.Cmd
+	}{arg1})
+	fake.recordInvocation("CombinedOutput", []interface{}{arg1})
+	fake.combinedOutputMutex.Unlock()
+	if fake.CombinedOutputStub != nil {
+		return fake.CombinedOutputStub(arg1)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.combinedOutputReturns.result1, fake.combinedOutputReturns.result2
+}
+
+func (fake *FakeExecWrapper) CombinedOutputCallCount() int {
+	fake.combinedOutputMutex.RLock()
+	defer fake.combinedOutputMutex.RUnlock()
+	return len(fake.combinedOutputArgsForCall)
+}
+
+func (fake *FakeExecWrapper) CombinedOutputArgsForCall(i int) *exec.Cmd {
+	fake.combinedOutputMutex.RLock()
+	defer fake.combinedOutputMutex.RUnlock()
+	return fake.combinedOutputArgsForCall[i].arg1
+}
+
+func (fake *FakeExecWrapper) CombinedOutputReturns(result1 []byte, result2 error) {
+	fake.CombinedOutputStub = nil
+	fake.combinedOutputReturns = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeExecWrapper) CombinedOutputReturnsOnCall(i int, result1 []byte, result2 error) {
+	fake.CombinedOutputStub = nil
+	if fake.combinedOutputReturnsOnCall == nil {
+		fake.combinedOutputReturnsOnCall = make(map[int]struct {
+			result1 []byte
+			result2 error
+		})
+	}
+	fake.combinedOutputReturnsOnCall[i] = struct {
+		result1 []byte
+		result2 error
+	}{result1, result2}
 }
 
 func (fake *FakeExecWrapper) LookPath(file string) (string, error) {
@@ -139,6 +203,8 @@ func (fake *FakeExecWrapper) RunReturnsOnCall(i int, result1 error) {
 func (fake *FakeExecWrapper) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
+	fake.combinedOutputMutex.RLock()
+	defer fake.combinedOutputMutex.RUnlock()
 	fake.lookPathMutex.RLock()
 	defer fake.lookPathMutex.RUnlock()
 	fake.runMutex.RLock()
