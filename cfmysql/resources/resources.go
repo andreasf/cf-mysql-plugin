@@ -28,6 +28,15 @@ type MysqlCredentials struct {
 	RawPort  json.RawMessage `json:"port"`
 	Username string          `json:"username"`
 	Password string          `json:"password"`
+	Tls      TlsResource     `json:"tls"`
+}
+
+type TlsResource struct {
+	Cert TlsCertResource `json:"cert"`
+}
+
+type TlsCertResource struct {
+	Ca string `json:"ca"`
 }
 
 type PaginatedServiceInstanceResources struct {
@@ -127,5 +136,6 @@ func (self *ServiceKeyResource) ToModel() (models.ServiceKey, error) {
 		Port:                port,
 		Username:            self.Entity.Credentials.Username,
 		Password:            self.Entity.Credentials.Password,
+		CaCert:              self.Entity.Credentials.Tls.Cert.Ca,
 	}, nil
 }

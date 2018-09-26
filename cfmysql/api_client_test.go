@@ -133,6 +133,7 @@ var _ = Describe("ApiClient", func() {
 					Port:                "3306",
 					Username:            "username",
 					Password:            "password",
+					CaCert:              "ca-certificate",
 				}))
 			})
 		})

@@ -152,17 +152,17 @@ func (self *MysqlPlugin) connectTo(cliConnection plugin.CliConnection, command s
 	tunnelPort := self.PortFinder.GetPort()
 	self.CfService.OpenSshTunnel(cliConnection, service, appsResult.Apps, tunnelPort)
 
-	err = self.runClient(command, "127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, mysqlArgs...)
+	err = self.runClient(command, "127.0.0.1", tunnelPort, service.DbName, service.Username, service.Password, service.CaCert, mysqlArgs...)
 	if err != nil {
 		fmt.Fprintf(self.Err, "FAILED\n%s", err)
 		self.setErrorExit()
 	}
 }
 
-func (self *MysqlPlugin) runClient(command string, hostname string, port int, dbName string, username string, password string, args ...string) error {
+func (self *MysqlPlugin) runClient(command string, hostname string, port int, dbName string, username string, password string, caCert string, args ...string) error {
 	switch command {
 	case "mysql":
-		return self.MysqlRunner.RunMysql(hostname, port, dbName, username, password, "", args...)
+		return self.MysqlRunner.RunMysql(hostname, port, dbName, username, password, caCert, args...)
 
 	case "mysqldump":
 		return self.MysqlRunner.RunMysqlDump(hostname, port, dbName, username, password, args...)

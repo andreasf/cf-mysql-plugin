@@ -24,4 +24,5 @@ type ServiceKey struct {
 	Port                string
 	Username            string
 	Password            string
+	CaCert              string
 }

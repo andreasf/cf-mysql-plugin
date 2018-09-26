@@ -61,6 +61,7 @@ var _ = Describe("CfService", func() {
 			Port:                "2342",
 			Username:            "username",
 			Password:            "password",
+			CaCert:              "ca-cert",
 		}
 
 		expectedMysqlService = MysqlService{
@@ -70,6 +71,7 @@ var _ = Describe("CfService", func() {
 			DbName:   "db-name",
 			Username: "username",
 			Password: "password",
+			CaCert:   "ca-cert",
 		}
 	})
 
@@ -210,14 +212,7 @@ var _ = Describe("CfService", func() {
 				mysqlService, err := service.GetService(cliConnection, "service-instance-name")
 
 				Expect(err).To(BeNil())
-				Expect(mysqlService).To(Equal(MysqlService{
-					Name:     "service-instance-name",
-					Hostname: "hostname",
-					Port:     "2342",
-					DbName:   "db-name",
-					Username: "username",
-					Password: "password",
-				}))
+				Expect(mysqlService).To(Equal(expectedMysqlService))
 
 				calledConnection, calledSpaceGuid, calledName := apiClient.GetServiceArgsForCall(0)
 				Expect(calledConnection).To(Equal(cliConnection))

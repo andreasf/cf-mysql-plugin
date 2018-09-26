@@ -35,6 +35,7 @@ type MysqlService struct {
 	DbName   string
 	Username string
 	Password string
+	CaCert   string
 }
 
 type cfService struct {
@@ -100,5 +101,6 @@ func toServiceModel(name string, serviceKey pluginModels.ServiceKey) MysqlServic
 		DbName:   serviceKey.DbName,
 		Username: serviceKey.Username,
 		Password: serviceKey.Password,
+		CaCert:   serviceKey.CaCert,
 	}
 }

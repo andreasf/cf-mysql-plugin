@@ -95,6 +95,7 @@ var _ = Describe("Resources", func() {
 				Expect(paginatedResources.Resources[0].Entity.Credentials.Hostname).To(Equal("hostname"))
 				Expect(paginatedResources.Resources[0].Entity.Credentials.Username).To(Equal("username"))
 				Expect(paginatedResources.Resources[0].Entity.Credentials.Password).To(Equal("password"))
+				Expect(paginatedResources.Resources[0].Entity.Credentials.Tls.Cert.Ca).To(Equal("ca-certificate"))
 
 				var portString string
 				err = json.Unmarshal(paginatedResources.Resources[0].Entity.Credentials.RawPort, &portString)
@@ -122,6 +123,11 @@ var _ = Describe("Resources", func() {
 									RawPort:  []byte("\"1234\""),
 									Username: "username-a",
 									Password: "password-a",
+									Tls: TlsResource{
+										Cert: TlsCertResource{
+											Ca: "ca-certificate-a",
+										},
+									},
 								},
 							},
 						},
@@ -154,6 +160,7 @@ var _ = Describe("Resources", func() {
 					Port:                "1234",
 					Username:            "username-a",
 					Password:            "password-a",
+					CaCert:              "ca-certificate-a",
 				}))
 				Expect(serviceKeys[1]).To(Equal(models.ServiceKey{
 					ServiceInstanceGuid: "service-instance-guid-b",
@@ -163,6 +170,7 @@ var _ = Describe("Resources", func() {
 					Port:                "2345",
 					Username:            "username-b",
 					Password:            "password-b",
+					CaCert:              "",
 				}))
 			})
 

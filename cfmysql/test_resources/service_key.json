@@ -21,7 +21,12 @@
           "hostname": "hostname",
           "port": "3306",
           "username": "username",
-          "password": "password"
+          "password": "password",
+          "tls": {
+            "cert": {
+              "ca": "ca-certificate"
+            }
+          }
         },
         "service_instance_url": "/v2/service_instances/service-instance-guid",
         "service_key_parameters_url": "/v2/service_keys/service-key-guid/parameters"
