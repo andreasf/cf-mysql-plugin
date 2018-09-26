@@ -47,11 +47,6 @@ type cfService struct {
 	logWriter   io.Writer
 }
 
-type BindingResult struct {
-	Bindings []pluginModels.ServiceBinding
-	Err      error
-}
-
 func (self *cfService) GetStartedApps(cliConnection plugin.CliConnection) ([]sdkModels.GetAppsModel, error) {
 	return self.apiClient.GetStartedApps(cliConnection)
 }
