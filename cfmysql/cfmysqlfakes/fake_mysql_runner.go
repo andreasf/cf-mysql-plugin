@@ -25,7 +25,7 @@ type FakeMysqlRunner struct {
 	runMysqlReturnsOnCall map[int]struct {
 		result1 error
 	}
-	RunMysqlDumpStub        func(hostname string, port int, dbName string, username string, password string, args ...string) error
+	RunMysqlDumpStub        func(hostname string, port int, dbName string, username string, password string, caCert string, args ...string) error
 	runMysqlDumpMutex       sync.RWMutex
 	runMysqlDumpArgsForCall []struct {
 		hostname string
@@ -33,6 +33,7 @@ type FakeMysqlRunner struct {
 		dbName   string
 		username string
 		password string
+		caCert   string
 		args     []string
 	}
 	runMysqlDumpReturns struct {
@@ -99,7 +100,7 @@ func (fake *FakeMysqlRunner) RunMysqlReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeMysqlRunner) RunMysqlDump(hostname string, port int, dbName string, username string, password string, args ...string) error {
+func (fake *FakeMysqlRunner) RunMysqlDump(hostname string, port int, dbName string, username string, password string, caCert string, args ...string) error {
 	fake.runMysqlDumpMutex.Lock()
 	ret, specificReturn := fake.runMysqlDumpReturnsOnCall[len(fake.runMysqlDumpArgsForCall)]
 	fake.runMysqlDumpArgsForCall = append(fake.runMysqlDumpArgsForCall, struct {
@@ -108,12 +109,13 @@ func (fake *FakeMysqlRunner) RunMysqlDump(hostname string, port int, dbName stri
 		dbName   string
 		username string
 		password string
+		caCert   string
 		args     []string
-	}{hostname, port, dbName, username, password, args})
-	fake.recordInvocation("RunMysqlDump", []interface{}{hostname, port, dbName, username, password, args})
+	}{hostname, port, dbName, username, password, caCert, args})
+	fake.recordInvocation("RunMysqlDump", []interface{}{hostname, port, dbName, username, password, caCert, args})
 	fake.runMysqlDumpMutex.Unlock()
 	if fake.RunMysqlDumpStub != nil {
-		return fake.RunMysqlDumpStub(hostname, port, dbName, username, password, args...)
+		return fake.RunMysqlDumpStub(hostname, port, dbName, username, password, caCert, args...)
 	}
 	if specificReturn {
 		return ret.result1
@@ -127,10 +129,10 @@ func (fake *FakeMysqlRunner) RunMysqlDumpCallCount() int {
 	return len(fake.runMysqlDumpArgsForCall)
 }
 
-func (fake *FakeMysqlRunner) RunMysqlDumpArgsForCall(i int) (string, int, string, string, string, []string) {
+func (fake *FakeMysqlRunner) RunMysqlDumpArgsForCall(i int) (string, int, string, string, string, string, []string) {
 	fake.runMysqlDumpMutex.RLock()
 	defer fake.runMysqlDumpMutex.RUnlock()
-	return fake.runMysqlDumpArgsForCall[i].hostname, fake.runMysqlDumpArgsForCall[i].port, fake.runMysqlDumpArgsForCall[i].dbName, fake.runMysqlDumpArgsForCall[i].username, fake.runMysqlDumpArgsForCall[i].password, fake.runMysqlDumpArgsForCall[i].args
+	return fake.runMysqlDumpArgsForCall[i].hostname, fake.runMysqlDumpArgsForCall[i].port, fake.runMysqlDumpArgsForCall[i].dbName, fake.runMysqlDumpArgsForCall[i].username, fake.runMysqlDumpArgsForCall[i].password, fake.runMysqlDumpArgsForCall[i].caCert, fake.runMysqlDumpArgsForCall[i].args
 }
 
 func (fake *FakeMysqlRunner) RunMysqlDumpReturns(result1 error) {

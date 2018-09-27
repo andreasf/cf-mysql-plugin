@@ -165,7 +165,7 @@ func (self *MysqlPlugin) runClient(command string, hostname string, port int, db
 		return self.MysqlRunner.RunMysql(hostname, port, dbName, username, password, caCert, args...)
 
 	case "mysqldump":
-		return self.MysqlRunner.RunMysqlDump(hostname, port, dbName, username, password, args...)
+		return self.MysqlRunner.RunMysqlDump(hostname, port, dbName, username, password, caCert, args...)
 	}
 
 	panic(fmt.Errorf("command not implemented: %s", command))

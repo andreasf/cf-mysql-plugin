@@ -231,6 +231,7 @@ var _ = Describe("Plugin", func() {
 				DbName:   "dbname-a",
 				Username: "username",
 				Password: "password",
+				CaCert:   "ca-cert",
 			}
 		})
 
@@ -280,12 +281,13 @@ var _ = Describe("Plugin", func() {
 				Expect(mocks.PortFinder.GetPortCallCount()).To(Equal(1))
 				Expect(mocks.MysqlRunner.RunMysqlDumpCallCount()).To(Equal(1))
 
-				hostname, port, dbName, username, password, _ := mocks.MysqlRunner.RunMysqlDumpArgsForCall(0)
+				hostname, port, dbName, username, password, caCert, _ := mocks.MysqlRunner.RunMysqlDumpArgsForCall(0)
 				Expect(hostname).To(Equal("127.0.0.1"))
 				Expect(port).To(Equal(2342))
 				Expect(dbName).To(Equal(serviceA.DbName))
 				Expect(username).To(Equal(serviceA.Username))
 				Expect(password).To(Equal(serviceA.Password))
+				Expect(caCert).To(Equal(serviceA.CaCert))
 			})
 		})
 	})

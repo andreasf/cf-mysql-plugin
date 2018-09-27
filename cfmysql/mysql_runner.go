@@ -12,7 +12,7 @@ import (
 //go:generate counterfeiter . MysqlRunner
 type MysqlRunner interface {
 	RunMysql(hostname string, port int, dbName string, username string, password string, caCert string, args ...string) error
-	RunMysqlDump(hostname string, port int, dbName string, username string, password string, args ...string) error
+	RunMysqlDump(hostname string, port int, dbName string, username string, password string, caCert string, args ...string) error
 }
 
 func NewMysqlRunner(execWrapper ExecWrapper, ioUtilWrapper IoUtilWrapper, osWrapper OsWrapper) MysqlRunner {
@@ -59,7 +59,7 @@ func (self *mysqlRunner) RunMysql(hostname string, port int, dbName string, user
 	return nil
 }
 
-func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, username string, password string, mysqlDumpArgs ...string) error {
+func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, username string, password string, caCert string, mysqlDumpArgs ...string) error {
 	path, err := self.execWrapper.LookPath("mysqldump")
 	if err != nil {
 		return errors.New("'mysqldump' not found in PATH")
@@ -77,7 +77,14 @@ func (self *mysqlRunner) RunMysqlDump(hostname string, port int, dbName string, 
 		nonTableArgs = mysqlDumpArgs[i+1:]
 	}
 
+	caCertArgs, caCertPath, err := self.storeCaCert(path, caCert)
+	defer self.osWrapper.Remove(caCertPath)
+	if err != nil {
+		return fmt.Errorf("error preparing TLS arguments: %s", err)
+	}
+
 	args := []string{"-u", username, "-p" + password, "-h", hostname, "-P", strconv.Itoa(port)}
+	args = append(args, caCertArgs...)
 	args = append(args, nonTableArgs...)
 	args = append(args, dbName)
 	args = append(args, tableArgs...)
