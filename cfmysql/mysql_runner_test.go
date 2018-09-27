@@ -102,7 +102,7 @@ var _ = Describe("MysqlRunner", func() {
 
 				tempFileDir, tempFilePattern := ioutilWrapper.TempFileArgsForCall(0)
 				Expect(tempFileDir).To(Equal(""))
-				Expect(tempFilePattern).To(Equal("mysql-ca-cert-*.pem"))
+				Expect(tempFilePattern).To(Equal("mysql-ca-cert.pem"))
 
 				writeStringFile, writeStringString := osWrapper.WriteStringArgsForCall(0)
 				Expect(writeStringFile).To(BeIdenticalTo(tempFile))

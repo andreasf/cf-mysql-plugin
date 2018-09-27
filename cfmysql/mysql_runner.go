@@ -100,7 +100,7 @@ func (self *mysqlRunner) storeCaCert(mysqlPath string, caCert string) ([]string,
 		return []string{}, "", nil
 	}
 
-	caCertFile, err := self.ioUtilWrapper.TempFile("", "mysql-ca-cert-*.pem")
+	caCertFile, err := self.ioUtilWrapper.TempFile("", "mysql-ca-cert.pem")
 	if err != nil {
 		return []string{}, "", fmt.Errorf("error creating temp file: %s", err)
 	}
