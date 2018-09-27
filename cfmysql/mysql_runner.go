@@ -112,19 +112,5 @@ func (self *mysqlRunner) storeCaCert(mysqlPath string, caCert string) ([]string,
 		return []string{}, "", fmt.Errorf("error writing CA certificate to temp file: %s", err)
 	}
 
-	cmd := exec.Command(mysqlPath, "--version")
-	mysqlVersionOutput, err := self.execWrapper.CombinedOutput(cmd)
-	if err != nil {
-		return []string{}, "", fmt.Errorf("error determining mysql client version: %s", err)
-	}
-
-	return self.caCertArgs(caCertPath, string(mysqlVersionOutput)), caCertPath, nil
-}
-
-func (self *mysqlRunner) caCertArgs(caCertPath string, mysqlVersionOutput string) []string {
-	if strings.Contains(mysqlVersionOutput, "MariaDB") {
-		return []string{"--ssl-ca=" + caCertPath, "--ssl-verify-server-cert"}
-	} else {
-		return []string{"--ssl-ca=" + caCertPath, "--ssl-mode=VERIFY_IDENTITY"}
-	}
+	return []string{"--ssl-ca=" + caCertPath}, caCertPath, nil
 }
