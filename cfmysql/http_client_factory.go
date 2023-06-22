@@ -18,6 +18,7 @@ type httpClientFactory struct{}
 
 func (self *httpClientFactory) NewClient(sslDisabled bool) *http.Client {
 	transport := &http.Transport{
+		Proxy:           http.ProxyFromEnvironment,
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: sslDisabled},
 	}
 	return &http.Client{Transport: transport}
