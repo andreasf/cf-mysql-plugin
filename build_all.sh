@@ -5,7 +5,7 @@ set -o pipefail
 BINARY="cf-mysql-plugin"
 
 main() {
-    ginkgo -r --randomizeAllSpecs --randomizeSuites --failOnPending --cover --trace --race --compilers=2
+    ginkgo -r --randomize-all --randomize-suites --fail-on-pending --cover --trace --race --compilers=2
 
     build_for_platform_and_arch linux amd64
     build_for_platform_and_arch linux 386

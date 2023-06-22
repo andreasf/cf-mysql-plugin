@@ -4,7 +4,7 @@ import (
 	"code.cloudfoundry.org/cli/plugin/pluginfakes"
 	"errors"
 	. "github.com/andreasf/cf-mysql-plugin/cfmysql"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 

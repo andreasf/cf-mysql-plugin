@@ -8,7 +8,7 @@ import (
 	"errors"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/models"
 	"github.com/andreasf/cf-mysql-plugin/cfmysql/test_resources"
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
