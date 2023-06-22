@@ -11,6 +11,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/gbytes"
+	"time"
 )
 
 var _ = Describe("CfService", func() {
@@ -115,7 +116,7 @@ var _ = Describe("CfService", func() {
 				openSshTunnelCalled <- true
 			}
 
-			It("Runs the SSH runner in a goroutine", func(done Done) {
+			It("Runs the SSH runner in a goroutine", func() {
 				cliConnection := new(pluginfakes.FakeCliConnection)
 				sshRunner := new(cfmysqlfakes.FakeSshRunner)
 				portWaiter := new(cfmysqlfakes.FakePortWaiter)
@@ -129,8 +130,13 @@ var _ = Describe("CfService", func() {
 				sshRunner.OpenSshTunnelStub = notifyWhenGoroutineCalled
 
 				service.OpenSshTunnel(cliConnection, mysqlService, appList, 4242)
-				<-openSshTunnelCalled
-				close(done)
+
+				select {
+				case <-openSshTunnelCalled:
+					break
+				case <-time.After(1 * time.Second):
+					Fail("timed out waiting for OpenSSH tunnel to be called")
+				}
 
 				Expect(sshRunner.OpenSshTunnelCallCount()).To(Equal(1))
 
@@ -142,7 +148,7 @@ var _ = Describe("CfService", func() {
 				Expect(calledService).To(Equal(mysqlService))
 				Expect(calledAppName).To(Equal("app-name-2"))
 				Expect(calledPort).To(Equal(4242))
-			}, 0.2)
+			})
 
 			It("Blocks until the tunnel is open", func() {
 				cliConnection.CliCommandWithoutTerminalOutputStub = nil
