@@ -13,7 +13,7 @@ import (
 )
 
 var _ = Describe("RequestDumper", func() {
-	expectedRequest := "\nREQUEST: [timestamp]\nBARK /such/test HTTP/1.1\r\nHost: wow\r\n\r\n\n"
+	expectedRequest := "\nREQUEST: [timestamp]\nBARK /such/test HTTP/1.1\nHost: wow\n\n"
 	expectedResponse := "\nRESPONSE: [timestamp]\nHTTP/1.1 200 BORK\r\nContent-Length: 0\r\n\r\n\n"
 
 	var response http.Response
